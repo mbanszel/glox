@@ -1,5 +1,10 @@
 package main
 
+import (
+  "strconv"
+  "fmt"
+)
+
 type TokenType int
 
 //go:generate stringer -type=TokenType
@@ -100,15 +105,34 @@ func (tt TokenType) String() string {
 }
 
 // ===========================================================================================
+var keywords = map[string]TokenType{
+  "and": AND,
+  "class": CLASS,
+  "else": ELSE,
+  "false": FALSE,
+  "for": FOR,
+  "fun": FUN,
+  "if": IF,
+  "nil": NIL,
+  "or": OR,
+  "print": PRINT,
+  "return": RETURN,
+  "super": SUPER,
+  "this": THIS,
+  "true": TRUE,
+  "var": VAR,
+  "while": WHILE,
+}
+// ===========================================================================================
 type Token struct {
 	tokenType TokenType
 	lexeme    string
-	literal   string
+	literal   any
 	line      int
 }
 
-func (t *Token) String() string {
-	return t.tokenType.String() + " " + t.lexeme + " " + t.literal
+func (t Token) String() string {
+  return fmt.Sprintf("%s %s %v", t.tokenType, t.lexeme, t.literal)
 }
 
 // ===========================================================================================
@@ -203,9 +227,29 @@ func (s *Scanner) scanToken() {
   case '\t':
   case '\n':
     s.line++
+  case '"':
+    s.string()
 	default:
-		emit_error(s.line, "Unexpected character")
+    if isDigit(c) {
+      s.number()
+    } else if isAlpha(c) {
+      s.identifier()
+    } else {
+      emit_error(s.line, "Unexpected character")
+    }
 	}
+}
+
+func isDigit(c byte) bool {
+  return c >= '0' && c<='9'
+}
+
+func isAlpha(c byte) bool {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
+}
+
+func isAlphaNumeric(c byte) bool {
+  return isAlpha(c) || isDigit(c)
 }
 
 func (s *Scanner) advance() byte {
@@ -235,15 +279,64 @@ func (s *Scanner) peek() byte {
   }
 }
 
-func (s *Scanner) addToken(tokenType TokenType) {
-	s.addTokenWithLiteral(tokenType, "")
+func (s *Scanner) peekNext() byte {
+  nextCurrent := s.current + 1
+  if nextCurrent >= len(s.source) {return 0}
+  return s.source[nextCurrent]
 }
 
-func (s *Scanner) addTokenWithLiteral(tokenType TokenType, literal string) {
+func (s *Scanner) addToken(tokenType TokenType) {
+	s.addTokenWithLiteral(tokenType, nil)
+}
+
+func (s *Scanner) addTokenWithLiteral(tokenType TokenType, literal any) {
 	text := s.source[s.start:s.current]
 	s.tokens = append(s.tokens, Token{tokenType, text, literal, s.line})
 }
 
 func (s *Scanner) isAtEnd() bool {
 	return s.current >= len(s.source)
+}
+
+func (s *Scanner) string() {
+  for s.peek() != '"' && !s.isAtEnd() {
+    if (s.peek() == '\n') {
+      s.line++
+    }
+    s.advance()
+  }
+
+  if s.isAtEnd() {
+    emit_error(s.line, "Unterminated string.")
+    return
+  }
+
+  // the closing "
+  s.advance()
+  s.addTokenWithLiteral(STRING, s.source[s.start+1:s.current-1])
+}
+
+func (s *Scanner) number() {
+  for isDigit(s.peek()) {s.advance()}
+
+  if s.peek() == '.' && isDigit(s.peekNext()) {
+    s.advance()
+    for isDigit(s.peek()) {s.advance()}
+  }
+  value, error := strconv.ParseFloat(s.source[s.start:s.current], 64)
+  if error!=nil {
+    panic("Unexpected error")
+  }
+  s.addTokenWithLiteral(NUMBER, value)
+}
+
+func (s *Scanner) identifier() {
+  for isAlphaNumeric(s.peek()) {s.advance()} 
+
+  value := s.source[s.start:s.current]
+  tokenType, ok := keywords[value]
+  if !ok {
+    tokenType = IDENTIFIER
+  }
+  s.addToken(tokenType)
 }

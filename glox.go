@@ -7,43 +7,41 @@ import (
 )
 
 func run(source string) {
-	fmt.Println("Executing code ", source)
-  scanner := NewScanner(source)
-  tokens := scanner.ScanTokens()
+	scanner := NewScanner(source)
+	tokens := scanner.ScanTokens()
 
-  for _, a_token := range tokens {
-    fmt.Println(a_token)
-  }
+	for _, a_token := range tokens {
+		fmt.Println(a_token)
+	}
 }
 
 func runFile(filename string) {
-	fmt.Println("running a file", filename)
 	bytes, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Println("Could not read file", filename)
-    panic("exiting")
+		panic("exiting")
 	}
 
 	run(string(bytes))
-  if hadError {
-    panic("exiting")
-  }
+	if hadError {
+		panic("exiting")
+	}
 
 }
 
 func runPrompt() {
-  fmt.Println("This is glox.")
+	fmt.Println("This is glox.")
 
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
 		fmt.Print(">>> ")
 		line, err := reader.ReadString('\n')
-    if err != nil {
-      break
-    }
+		if err != nil {
+			break
+		}
 		run(line)
-    hadError = false
+		hadError = false
 	}
 }
 
