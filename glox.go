@@ -25,6 +25,9 @@ func runFile(filename string) {
 	}
 
 	run(string(bytes))
+  if hadError {
+    panic("exiting")
+  }
 
 }
 
@@ -40,6 +43,7 @@ func runPrompt() {
       break
     }
 		run(line)
+    hadError = false
 	}
 }
 

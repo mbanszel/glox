@@ -1,16 +1,16 @@
 package main
 
 import (
-  "fmt"
+	"fmt"
 )
 
 var hadError = false
 
-func error(line int, message string) {
-  report(line, "", message)
+func emit_error(line int, message string) {
+	report_error(line, "", message)
 }
 
-func report(line int, where string, message string) {
-  fmt.Println("[line", line, "] Error", where, ":", message)
-  hadError = true
+func report_error(line int, where string, message string) {
+	fmt.Println("[line", line, "] Error", where, ":", message)
+	hadError = true
 }
