@@ -166,8 +166,43 @@ func (s *Scanner) scanToken() {
 		s.addToken(SEMICOLON)
 	case '*':
 		s.addToken(STAR)
-	case '\n':
-		s.addToken(EOL)
+  case '!':
+    if s.match('=') {
+      s.addToken(BANG_EQUAL)
+    } else {
+      s.addToken(BANG)
+    }
+  case '<':
+    if s.match('=') {
+      s.addToken(LESS_EQUAL)
+    } else {
+      s.addToken(LESS)
+    }
+  case '>':
+    if s.match('=') {
+      s.addToken(GREATER_EQUAL)
+    } else {
+      s.addToken(GREATER)
+    }
+  case '=':
+    if s.match('=') {
+      s.addToken(EQUAL_EQUAL)
+    } else {
+      s.addToken(EQUAL)
+    }
+  case '/':
+    if s.match('/') {
+      for s.peek() != '\n' && !s.isAtEnd() {
+        s.advance()
+      }
+    } else {
+      s.addToken(SLASH)
+    }
+  case ' ':
+  case '\r':
+  case '\t':
+  case '\n':
+    s.line++
 	default:
 		emit_error(s.line, "Unexpected character")
 	}
@@ -177,6 +212,27 @@ func (s *Scanner) advance() byte {
 	next := s.source[s.current]
 	s.current++
 	return next
+}
+
+func (s *Scanner) match(expected byte) bool {
+  if s.isAtEnd() {
+    return false
+  }
+
+  if s.source[s.current] != expected {
+    return false
+  }
+
+  s.current++
+  return true
+}
+
+func (s *Scanner) peek() byte {
+  if s.isAtEnd() {
+    return 0 // byte with ordinal 0 should not appear in the source code...?
+  } else {
+    return s.source[s.current]
+  }
 }
 
 func (s *Scanner) addToken(tokenType TokenType) {
