@@ -1,2 +1,6 @@
-all: glox.go scanner/*.go errors/*.go
-	CGO_ENABLED=0 GOFLAGS="-ldflags=-s -w" go build -trimpath -o glox .
+generate_ast: generate_ast/generate_ast.go
+	cd generate_ast && go build .
+
+glox: glox.go scanner/*.go errors/*.go
+	go build .
+
