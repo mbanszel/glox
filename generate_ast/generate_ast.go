@@ -19,7 +19,7 @@ func main() {
 		"Binary	  : left Expr, operator Token, right Expr",
 		"Grouping : expression Expr",
 		"Literal  : value any",
-		"Unary    : operator TokenType, right Expr",
+		"Unary    : operator Token, right Expr",
 	})
 }
 
@@ -54,7 +54,8 @@ func defineAst(outputDir string, baseName string, types []string) {
 func defineTokenType(file io.Writer, baseName string, className string, fieldList string) {
 	fmt.Fprintln(file, "// ", "-------------------------------------------------------------")
 	fields := strings.Split(fieldList, ",")
-	fmt.Fprintln(file, "type "+className+" struct {")
+	typeName := defineTypeName(className, baseName)
+	fmt.Fprintln(file, "type "+typeName+" struct {")
 
 	for _, field := range fields {
 		field = strings.TrimSpace(field)
@@ -63,8 +64,8 @@ func defineTokenType(file io.Writer, baseName string, className string, fieldLis
 	fmt.Fprintln(file, "}")
 	fmt.Fprintln(file)
 
-	fmt.Fprintf(file, "func New%s(%s) %s {\n", className, fieldList, className)
-	fmt.Fprintf(file, "  return %s{\n", className)
+	fmt.Fprintf(file, "func New%s(%s) %s {\n", typeName, fieldList, typeName)
+	fmt.Fprintf(file, "  return %s{\n", typeName)
 	for _, field := range fields {
 		field = strings.TrimSpace(field)
 		name := strings.Split(field, " ")[0]
@@ -74,8 +75,8 @@ func defineTokenType(file io.Writer, baseName string, className string, fieldLis
 	fmt.Fprintln(file, "}")
 	fmt.Fprintln(file)
 
-	fmt.Fprintf(file, "func (c %s) Accept(visitor %sVisitor) any {\n", className, baseName)
-	fmt.Fprintf(file, "  return visitor.Visit%s(c)\n", className)
+	fmt.Fprintf(file, "func (c %s) Accept(visitor %sVisitor) any {\n", typeName, baseName)
+	fmt.Fprintf(file, "  return visitor.Visit%s(c)\n", typeName)
 	fmt.Fprintf(file, "}\n")
 
 }
@@ -83,10 +84,15 @@ func defineTokenType(file io.Writer, baseName string, className string, fieldLis
 func defineVisitor(file io.Writer, baseName string, types []string) {
 	fmt.Fprintf(file, "type %sVisitor interface {\n", baseName)
 	for _, aType := range types {
-		typeName := strings.TrimSpace(strings.Split(aType, ":")[0])
+		className := strings.TrimSpace(strings.Split(aType, ":")[0])
+		typeName := defineTypeName(className, baseName)
 		base := strings.ToLower(baseName)
 		fmt.Fprintf(file, "  Visit%s(%s %s) any\n", typeName, base, typeName)
 	}
 	fmt.Fprintln(file, "}")
 
+}
+
+func defineTypeName(className, baseName string) string {
+	return className + baseName
 }

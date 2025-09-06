@@ -2,10 +2,10 @@
 package lox
 
 type ExprVisitor interface {
-  VisitBinary(expr Binary) any
-  VisitGrouping(expr Grouping) any
-  VisitLiteral(expr Literal) any
-  VisitUnary(expr Unary) any
+  VisitBinaryExpr(expr BinaryExpr) any
+  VisitGroupingExpr(expr GroupingExpr) any
+  VisitLiteralExpr(expr LiteralExpr) any
+  VisitUnaryExpr(expr UnaryExpr) any
 }
 
 type Expr interface {
@@ -13,64 +13,64 @@ type Expr interface {
 }
 
 //  -------------------------------------------------------------
-type Binary struct {
+type BinaryExpr struct {
   left Expr
   operator Token
   right Expr
 }
 
-func NewBinary(left Expr, operator Token, right Expr) Binary {
-  return Binary{
+func NewBinaryExpr(left Expr, operator Token, right Expr) BinaryExpr {
+  return BinaryExpr{
     left:left,
     operator:operator,
     right:right,
   }
 }
 
-func (c Binary) Accept(visitor ExprVisitor) any {
-  return visitor.VisitBinary(c)
+func (c BinaryExpr) Accept(visitor ExprVisitor) any {
+  return visitor.VisitBinaryExpr(c)
 }
 //  -------------------------------------------------------------
-type Grouping struct {
+type GroupingExpr struct {
   expression Expr
 }
 
-func NewGrouping(expression Expr) Grouping {
-  return Grouping{
+func NewGroupingExpr(expression Expr) GroupingExpr {
+  return GroupingExpr{
     expression:expression,
   }
 }
 
-func (c Grouping) Accept(visitor ExprVisitor) any {
-  return visitor.VisitGrouping(c)
+func (c GroupingExpr) Accept(visitor ExprVisitor) any {
+  return visitor.VisitGroupingExpr(c)
 }
 //  -------------------------------------------------------------
-type Literal struct {
+type LiteralExpr struct {
   value any
 }
 
-func NewLiteral(value any) Literal {
-  return Literal{
+func NewLiteralExpr(value any) LiteralExpr {
+  return LiteralExpr{
     value:value,
   }
 }
 
-func (c Literal) Accept(visitor ExprVisitor) any {
-  return visitor.VisitLiteral(c)
+func (c LiteralExpr) Accept(visitor ExprVisitor) any {
+  return visitor.VisitLiteralExpr(c)
 }
 //  -------------------------------------------------------------
-type Unary struct {
-  operator TokenType
+type UnaryExpr struct {
+  operator Token
   right Expr
 }
 
-func NewUnary(operator TokenType, right Expr) Unary {
-  return Unary{
+func NewUnaryExpr(operator Token, right Expr) UnaryExpr {
+  return UnaryExpr{
     operator:operator,
     right:right,
   }
 }
 
-func (c Unary) Accept(visitor ExprVisitor) any {
-  return visitor.VisitUnary(c)
+func (c UnaryExpr) Accept(visitor ExprVisitor) any {
+  return visitor.VisitUnaryExpr(c)
 }
