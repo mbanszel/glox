@@ -12,9 +12,17 @@ func run(source string) {
 	scanner := lox.NewScanner(source)
 	tokens := scanner.ScanTokens()
 
-	for _, a_token := range tokens {
-		fmt.Println(a_token)
+	// for _, a_token := range tokens {
+	// 	fmt.Println(a_token)
+	// }
+	parser := lox.NewParser(tokens)
+	expression := parser.Parse()
+
+	if lox.HadError {
+		return
 	}
+
+	fmt.Println(lox.NewAstPrinter().Print(expression))
 }
 
 func runFile(filename string) {

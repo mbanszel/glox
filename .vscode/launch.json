@@ -14,6 +14,14 @@
             "args": ["keywords.glox"]
         },
         {
+            "name": "Launch glox expression1.glox",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/glox.go",
+            "args": ["examples/expression1.glox"]
+        },
+        {
             "name": "Launch generate_ast",
             "type": "go",
             "request": "launch",
