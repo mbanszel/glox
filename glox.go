@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"github.com/mbanszel/glox/scanner"
-	"github.com/mbanszel/glox/errors"
+
+	"github.com/mbanszel/glox/lox"
 )
 
 func run(source string) {
-	scanner := scanner.NewScanner(source)
+	scanner := lox.NewScanner(source)
 	tokens := scanner.ScanTokens()
 
 	for _, a_token := range tokens {
@@ -25,7 +25,7 @@ func runFile(filename string) {
 	}
 
 	run(string(bytes))
-	if errors.HadError {
+	if lox.HadError {
 		panic("exiting")
 	}
 
@@ -43,7 +43,7 @@ func runPrompt() {
 			break
 		}
 		run(line)
-		errors.HadError = false
+		lox.HadError = false
 	}
 }
 

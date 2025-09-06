@@ -1,9 +1,7 @@
-package scanner
+package lox
 
 import (
 	"strconv"
-
-	"github.com/mbanszel/glox/errors"
 )
 
 // ** static helper methods ** //
@@ -121,7 +119,7 @@ func (s *Scanner) scanToken() {
 		} else if isAlpha(c) {
 			s.identifier()
 		} else {
-			errors.Emit(s.line, "Unexpected character (" + string(c) + ")")
+			Emit(s.line, "Unexpected character (" + string(c) + ")")
 		}
 	}
 }
@@ -183,7 +181,7 @@ func (s *Scanner) string() {
 	}
 
 	if s.isAtEnd() {
-		errors.Emit(s.line, "Unterminated string.")
+		Emit(s.line, "Unterminated string.")
 		return
 	}
 
