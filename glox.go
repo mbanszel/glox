@@ -23,6 +23,10 @@ func run(source string) {
 	}
 
 	fmt.Println(lox.NewAstPrinter().Print(expression))
+
+	interpreter := lox.NewIterpreter()
+	result := interpreter.Interpret(expression)
+	fmt.Printf("%v\n", result)
 }
 
 func runFile(filename string) {
