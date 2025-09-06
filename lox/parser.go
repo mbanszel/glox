@@ -20,7 +20,7 @@ func (p *Parser) Parse() Expr {
 
 // The lox grammar:
 // ----------------
-// expression     → equality ;
+// expression     → equality ( "," equality)*;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // term           → factor ( ( "-" | "+" ) factor )* ;
@@ -31,7 +31,21 @@ func (p *Parser) Parse() Expr {
 //                | "(" expression ")" ;
 
 func (p *Parser) expression() (Expr, *ParserError) {
-	return p.equality()
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(COMMA) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+		expr = NewBinaryExpr(expr, operator, right)
+	}
+
+	return expr, nil
 }
 
 func (p *Parser) equality() (Expr, *ParserError) {
