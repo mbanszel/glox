@@ -3,6 +3,7 @@ package lox
 
 type ExprVisitor interface {
   VisitBinaryExpr(expr BinaryExpr) any
+  VisitTernaryExpr(expr TernaryExpr) any
   VisitGroupingExpr(expr GroupingExpr) any
   VisitLiteralExpr(expr LiteralExpr) any
   VisitUnaryExpr(expr UnaryExpr) any
@@ -29,6 +30,24 @@ func NewBinaryExpr(left Expr, operator Token, right Expr) BinaryExpr {
 
 func (c BinaryExpr) Accept(visitor ExprVisitor) any {
   return visitor.VisitBinaryExpr(c)
+}
+//  -------------------------------------------------------------
+type TernaryExpr struct {
+  condition Expr
+  trueBranch Expr
+  falseBranch Expr
+}
+
+func NewTernaryExpr(condition Expr, trueBranch Expr, falseBranch Expr) TernaryExpr {
+  return TernaryExpr{
+    condition:condition,
+    trueBranch:trueBranch,
+    falseBranch:falseBranch,
+  }
+}
+
+func (c TernaryExpr) Accept(visitor ExprVisitor) any {
+  return visitor.VisitTernaryExpr(c)
 }
 //  -------------------------------------------------------------
 type GroupingExpr struct {

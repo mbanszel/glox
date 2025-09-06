@@ -17,6 +17,7 @@ func main() {
 
 	defineAst(outputDir, "Expr", []string{
 		"Binary	  : left Expr, operator Token, right Expr",
+		"Ternary  : condition Expr, trueBranch Expr, falseBranch Expr",
 		"Grouping : expression Expr",
 		"Literal  : value any",
 		"Unary    : operator Token, right Expr",

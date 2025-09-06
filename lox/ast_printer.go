@@ -24,6 +24,10 @@ func (p AstPrinter) VisitBinaryExpr(expr BinaryExpr) any {
 	return p.parenthesize(expr.operator.lexeme, expr.left, expr.right)
 }
 
+func (p AstPrinter) VisitTernaryExpr(expr TernaryExpr) any {
+	return p.parenthesize("ternary", expr.condition, expr.trueBranch, expr.falseBranch)
+}
+
 func (p AstPrinter) VisitGroupingExpr(expr GroupingExpr) any {
 	return p.parenthesize("group", expr.expression)
 }

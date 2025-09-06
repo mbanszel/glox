@@ -20,7 +20,7 @@ func (p *Parser) Parse() Expr {
 
 // The lox grammar:
 // ----------------
-// expression     → equality ( "," equality)*;
+// expression     → equality ( "," equality | "?" expression ":" expression)*;
 // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // term           → factor ( ( "-" | "+" ) factor )* ;
@@ -36,13 +36,30 @@ func (p *Parser) expression() (Expr, *ParserError) {
 		return nil, err
 	}
 
-	for p.match(COMMA) {
+	for p.match(COMMA, QUESTION) {
 		operator := p.previous()
-		right, err := p.equality()
-		if err != nil {
-			return nil, err
+
+		if operator.tokenType == COMMA {
+			right, err := p.equality()
+			if err != nil {
+				return nil, err
+			}
+			expr = NewBinaryExpr(expr, operator, right)
+		} else {
+			trueBranch, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			_, err = p.consume(COLON, "Expect ':' in ternary operator.")
+			if err != nil {
+				return nil, err
+			}
+			leftBranch, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			expr = NewTernaryExpr(expr, trueBranch, leftBranch)
 		}
-		expr = NewBinaryExpr(expr, operator, right)
 	}
 
 	return expr, nil
