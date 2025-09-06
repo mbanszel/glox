@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 
+	"github.com/chzyer/readline"
 	"github.com/mbanszel/glox/lox"
 )
 
@@ -46,16 +46,27 @@ func runFile(filename string) {
 func runPrompt() {
 	fmt.Println("This is glox.")
 
-	reader := bufio.NewReader(os.Stdin)
+	rl, err := readline.New(">>> ")
+	if err != nil {
+		panic("Readline failed.")
+	}
+	defer rl.Close()
+
+	fmt.Println("Type 'exit' to quit.")
 
 	for {
-		fmt.Print(">>> ")
-		line, err := reader.ReadString('\n')
+		line, err := rl.Readline()
+
 		if err != nil {
 			break
 		}
+
+		if line == "exit" {
+			break
+		}
+
 		run(line)
-		lox.HadError = false
+
 	}
 }
 
