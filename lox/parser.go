@@ -106,7 +106,7 @@ func (p *Parser) term() (Expr, *ParserError) {
 		return nil, err
 	}
 
-	for (p.match(MINUS, PLUS)) {
+	for p.match(MINUS, PLUS) {
 		operator := p.previous()
 		right, err := p.factor()
 		if err!=nil {
