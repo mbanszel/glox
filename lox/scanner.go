@@ -46,7 +46,7 @@ func (s *Scanner) ScanTokens() []Token {
 		s.scanToken()
 	}
 
-	s.tokens = append(s.tokens, Token{tokenType: EOF, lexeme: "", literal: "", line: s.line})
+	s.tokens = append(s.tokens, Token{TokenType: EOF, Lexeme: "", Literal: "", Line: s.line})
 
 	return s.tokens
 }
@@ -119,7 +119,7 @@ func (s *Scanner) scanToken() {
 		} else if isAlpha(c) {
 			s.identifier()
 		} else {
-			Emit(s.line, "Unexpected character (" + string(c) + ")")
+			Emit(s.line, "Unexpected character ("+string(c)+")")
 		}
 	}
 }

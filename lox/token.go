@@ -105,31 +105,32 @@ func (tt TokenType) String() string {
 
 // ===========================================================================================
 var keywords = map[string]TokenType{
-  "and": AND,
-  "class": CLASS,
-  "else": ELSE,
-  "false": FALSE,
-  "for": FOR,
-  "fun": FUN,
-  "if": IF,
-  "nil": NIL,
-  "or": OR,
-  "print": PRINT,
-  "return": RETURN,
-  "super": SUPER,
-  "this": THIS,
-  "true": TRUE,
-  "var": VAR,
-  "while": WHILE,
+	"and":    AND,
+	"class":  CLASS,
+	"else":   ELSE,
+	"false":  FALSE,
+	"for":    FOR,
+	"fun":    FUN,
+	"if":     IF,
+	"nil":    NIL,
+	"or":     OR,
+	"print":  PRINT,
+	"return": RETURN,
+	"super":  SUPER,
+	"this":   THIS,
+	"true":   TRUE,
+	"var":    VAR,
+	"while":  WHILE,
 }
+
 // ===========================================================================================
 type Token struct {
-	tokenType TokenType
-	lexeme    string
-	literal   any
-	line      int
+	TokenType TokenType
+	Lexeme    string
+	Literal   any
+	Line      int
 }
 
 func (t Token) String() string {
-  return fmt.Sprintf("%s %s %v", t.tokenType, t.lexeme, t.literal)
+	return fmt.Sprintf("%s %s %v", t.TokenType, t.Lexeme, t.Literal)
 }

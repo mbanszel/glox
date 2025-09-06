@@ -25,7 +25,20 @@ func run(source string) {
 	fmt.Println(lox.NewAstPrinter().Print(expression))
 
 	interpreter := lox.NewIterpreter()
-	result := interpreter.Interpret(expression)
+	result, err := interpreter.Interpret(expression)
+	if err != nil {
+		rtError := err.(lox.RuntimeError)
+		token := rtError.GetToken()
+		lox.Report(
+			token.Line,
+			token.Lexeme,
+			fmt.Sprintf(
+				"Runtime error: %s",
+				rtError.GetMessage(),
+			),
+		)
+		lox.HadError = false
+	}
 	fmt.Printf("%v\n", result)
 }
 
@@ -44,9 +57,12 @@ func runFile(filename string) {
 }
 
 func runPrompt() {
-	fmt.Println("This is glox.")
+	prompt := os.Getenv("GLOX_PROMPT")
+	if prompt == "" {
+		prompt = ">>> "
+	}
 
-	rl, err := readline.New(">>> ")
+	rl, err := readline.New(prompt)
 	if err != nil {
 		panic("Readline failed.")
 	}

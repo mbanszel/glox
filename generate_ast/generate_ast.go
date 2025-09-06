@@ -38,7 +38,7 @@ func defineAst(outputDir string, baseName string, types []string) {
 	defineVisitor(file, baseName, types)
 	fmt.Fprintln(file)
 	fmt.Fprintln(file, "type "+baseName+" interface {")
-	fmt.Fprintf(file, "  Accept(visitor %sVisitor) any\n", baseName)
+	fmt.Fprintf(file, "  Accept(visitor %sVisitor) (any, LoxError)\n", baseName)
 	fmt.Fprintln(file, "}")
 	fmt.Fprintln(file)
 
@@ -75,7 +75,7 @@ func defineTokenType(file io.Writer, baseName string, className string, fieldLis
 	fmt.Fprintln(file, "}")
 	fmt.Fprintln(file)
 
-	fmt.Fprintf(file, "func (c %s) Accept(visitor %sVisitor) any {\n", typeName, baseName)
+	fmt.Fprintf(file, "func (c %s) Accept(visitor %sVisitor) (any, LoxError) {\n", typeName, baseName)
 	fmt.Fprintf(file, "  return visitor.Visit%s(c)\n", typeName)
 	fmt.Fprintf(file, "}\n")
 
@@ -87,7 +87,7 @@ func defineVisitor(file io.Writer, baseName string, types []string) {
 		className := strings.TrimSpace(strings.Split(aType, ":")[0])
 		typeName := defineTypeName(className, baseName)
 		base := strings.ToLower(baseName)
-		fmt.Fprintf(file, "  Visit%s(%s %s) any\n", typeName, base, typeName)
+		fmt.Fprintf(file, "  Visit%s(%s %s) (any, LoxError)\n", typeName, base, typeName)
 	}
 	fmt.Fprintln(file, "}")
 

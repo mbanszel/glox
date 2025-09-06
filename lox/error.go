@@ -16,13 +16,15 @@ func Report(line int, where string, message string) {
 }
 
 func Error(token Token, message string) {
-	if token.tokenType == EOF {
-		Report(token.line, " at end", message)
+	if token.TokenType == EOF {
+		Report(token.Line, " at end", message)
 	} else {
 		Report(
-			token.line,
-			fmt.Sprintf(" at '%s'", token.lexeme),
+			token.Line,
+			fmt.Sprintf(" at '%s'", token.Lexeme),
 			message,
 		)
 	}
 }
+
+type LoxError interface{}

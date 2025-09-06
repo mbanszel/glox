@@ -1,8 +1,9 @@
 package lox
+
 // recursive descent parser for (g)lox interpreter
 
 type Parser struct {
-	tokens []Token
+	tokens  []Token
 	current int
 }
 
@@ -30,11 +31,11 @@ func (p *Parser) Parse() Expr {
 // primary        → NUMBER | STRING | "true" | "false" | "nil"
 //                | "(" expression ")" ;
 
-func (p *Parser) expression() (Expr, *ParserError) {
+func (p *Parser) expression() (Expr, ParserError) {
 	return p.equality()
 }
 
-func (p *Parser) equality() (Expr, *ParserError) {
+func (p *Parser) equality() (Expr, ParserError) {
 	expr, err := p.comparison()
 	if err != nil {
 		return nil, err
@@ -52,13 +53,13 @@ func (p *Parser) equality() (Expr, *ParserError) {
 	return expr, nil
 }
 
-func (p *Parser) comparison() (Expr, *ParserError) {
+func (p *Parser) comparison() (Expr, ParserError) {
 	expr, err := p.term()
 	if err != nil {
 		return nil, err
 	}
 
-	for (p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+	for p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
 		operator := p.previous()
 		right, err := p.term()
 		if err != nil {
@@ -69,16 +70,16 @@ func (p *Parser) comparison() (Expr, *ParserError) {
 	return expr, nil
 }
 
-func (p *Parser) term() (Expr, *ParserError) {
+func (p *Parser) term() (Expr, ParserError) {
 	expr, err := p.factor()
 	if err != nil {
 		return nil, err
 	}
 
-	for (p.match(MINUS, PLUS)) {
+	for p.match(MINUS, PLUS) {
 		operator := p.previous()
 		right, err := p.factor()
-		if err!=nil {
+		if err != nil {
 			return nil, err
 		}
 		expr = NewBinaryExpr(expr, operator, right)
@@ -87,13 +88,13 @@ func (p *Parser) term() (Expr, *ParserError) {
 
 }
 
-func (p *Parser) factor() (Expr, *ParserError) {
+func (p *Parser) factor() (Expr, ParserError) {
 	expr, err := p.unary()
 	if err != nil {
 		return nil, err
 	}
 
-	for (p.match(SLASH, STAR)) {
+	for p.match(SLASH, STAR) {
 		operator := p.previous()
 		right, err := p.unary()
 		if err != nil {
@@ -104,7 +105,7 @@ func (p *Parser) factor() (Expr, *ParserError) {
 	return expr, nil
 }
 
-func (p *Parser) unary() (Expr, *ParserError) {
+func (p *Parser) unary() (Expr, ParserError) {
 	if p.match(BANG, MINUS) {
 		operator := p.previous()
 		right, err := p.unary()
@@ -112,11 +113,11 @@ func (p *Parser) unary() (Expr, *ParserError) {
 			return nil, err
 		}
 		return NewUnaryExpr(operator, right), nil
-	} 
+	}
 	return p.primary()
 }
 
-func (p *Parser) primary() (Expr, *ParserError) {
+func (p *Parser) primary() (Expr, ParserError) {
 	switch {
 	case p.match(FALSE):
 		return NewLiteralExpr(false), nil
@@ -125,7 +126,7 @@ func (p *Parser) primary() (Expr, *ParserError) {
 	case p.match(NIL):
 		return NewLiteralExpr(nil), nil
 	case p.match(NUMBER, STRING):
-		return NewLiteralExpr(p.previous().literal), nil
+		return NewLiteralExpr(p.previous().Literal), nil
 	case p.match(LEFT_PAREN):
 		expr, err := p.expression()
 		if err != nil {
@@ -143,7 +144,7 @@ func (p *Parser) primary() (Expr, *ParserError) {
 
 // -----------------------------------------------------------------
 
-func (p *Parser) consume(tokenType TokenType, message string) (Token, *ParserError) {
+func (p *Parser) consume(tokenType TokenType, message string) (Token, ParserError) {
 	if p.check(tokenType) {
 		return p.advance(), nil
 	}
@@ -154,7 +155,7 @@ func (p *Parser) consume(tokenType TokenType, message string) (Token, *ParserErr
 
 func (p *Parser) match(types ...TokenType) bool {
 	for _, tokenType := range types {
-		if (p.check(tokenType)) {
+		if p.check(tokenType) {
 			p.advance()
 			return true
 		}
@@ -163,18 +164,22 @@ func (p *Parser) match(types ...TokenType) bool {
 }
 
 func (p *Parser) check(tokenType TokenType) bool {
-	if (p.isAtEnd()) {return false}
-	return p.peek().tokenType == tokenType
+	if p.isAtEnd() {
+		return false
+	}
+	return p.peek().TokenType == tokenType
 }
 
 func (p *Parser) advance() Token {
 	// TODO why this way? What is isAtEnd is true -- advnace then returns the last token?
-	if !p.isAtEnd() {p.current++}
+	if !p.isAtEnd() {
+		p.current++
+	}
 	return p.previous()
 }
 
 func (p *Parser) isAtEnd() bool {
-	return p.peek().tokenType == EOF
+	return p.peek().TokenType == EOF
 }
 
 func (p *Parser) peek() Token {
@@ -182,16 +187,18 @@ func (p *Parser) peek() Token {
 }
 
 func (p *Parser) previous() Token {
-	return p.tokens[p.current - 1]
+	return p.tokens[p.current-1]
 }
 
 func (p *Parser) synchronize() {
 	p.advance()
 
 	for !p.isAtEnd() {
-		if p.previous().tokenType == SEMICOLON {return}
+		if p.previous().TokenType == SEMICOLON {
+			return
+		}
 
-		switch p.peek().tokenType {
+		switch p.peek().TokenType {
 		case CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN:
 			return
 		default:
@@ -200,9 +207,12 @@ func (p *Parser) synchronize() {
 	}
 }
 
-func (p *Parser) error(token Token, message string) *ParserError {
+func (p *Parser) error(token Token, message string) ParserError {
 	Error(token, message)
-	return &ParserError{}
+	return &ParserErrorObj{}
 }
 
-type ParserError struct{}
+type ParserError interface {
+	LoxError
+}
+type ParserErrorObj struct{}

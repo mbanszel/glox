@@ -6,18 +6,27 @@ func NewIterpreter() *Interpreter {
 	return &Interpreter{}
 }
 
-func (i *Interpreter) Interpret(expr Expr) any {
-	result := expr.Accept(i)
-	return result
+func (i *Interpreter) Interpret(expr Expr) (any, LoxError) {
+	res, err := expr.Accept(i)
+	return res, err
 }
 
-func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) any {
-	left := i.evaluate(expr.left)
-	right := i.evaluate(expr.right)
+func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
+	left, err := i.evaluate(expr.left)
+	if err != nil {
+		return nil, err
+	}
+	right, err := i.evaluate(expr.right)
+	if err != nil {
+		return nil, err
+	}
 
-	switch expr.operator.tokenType {
+	switch expr.operator.TokenType {
 	case MINUS:
-		return left.(float64) - right.(float64)
+		if validateNumber(left, right) {
+			return left.(float64) - right.(float64), nil
+		}
+		return nil, &RuntimeErrorObj{expr.operator, "has invalid operands"}
 	case PLUS:
 		right_num, right_num_ok := right.(float64)
 		left_num, left_num_ok := left.(float64)
@@ -26,9 +35,9 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) any {
 
 		switch {
 		case left_num_ok && right_num_ok:
-			return left_num + right_num
+			return left_num + right_num, nil
 		case left_str_ok && right_str_ok:
-			return left_str + right_str
+			return left_str + right_str, nil
 		default:
 			panic("Incompatible types for +: both must be either string or number")
 		}
@@ -40,7 +49,7 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) any {
 
 		switch {
 		case left_num_ok && right_num_ok:
-			return left_num * right_num
+			return left_num * right_num, nil
 		case left_num_ok && right_str_ok:
 			return i.multiplyString(int(left_num), right_str)
 		case right_num_ok && left_str_ok:
@@ -49,75 +58,103 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) any {
 			panic("Cannot multiply string by string")
 		}
 	case SLASH:
-		return left.(float64) / right.(float64)
+		return left.(float64) / right.(float64), nil
 	case GREATER:
-		return left.(float64) > right.(float64)
+		return left.(float64) > right.(float64), nil
 	case GREATER_EQUAL:
-		return left.(float64) >= right.(float64)
+		return left.(float64) >= right.(float64), nil
 	case LESS:
-		return left.(float64) < right.(float64)
+		return left.(float64) < right.(float64), nil
 	case LESS_EQUAL:
-		return left.(float64) <= right.(float64)
+		return left.(float64) <= right.(float64), nil
 	case BANG_EQUAL:
-		return !i.isEqual(left, right)
+		value, err := i.isEqual(left, right)
+		return !value, err
 	case EQUAL:
 		return i.isEqual(left, right)
 	}
 
-	return nil
+	return nil, nil
 }
-func (i *Interpreter) VisitGroupingExpr(expr GroupingExpr) any {
+func (i *Interpreter) VisitGroupingExpr(expr GroupingExpr) (any, LoxError) {
 	return i.evaluate(expr.expression)
 }
-func (i *Interpreter) VisitLiteralExpr(expr LiteralExpr) any {
-	return expr.value
+func (i *Interpreter) VisitLiteralExpr(expr LiteralExpr) (any, LoxError) {
+	return expr.value, nil
 }
-func (i *Interpreter) VisitUnaryExpr(expr UnaryExpr) any {
-	right := i.evaluate(expr.right)
+func (i *Interpreter) VisitUnaryExpr(expr UnaryExpr) (any, LoxError) {
+	right, _ := i.evaluate(expr.right)
 
-	switch expr.operator.tokenType {
+	switch expr.operator.TokenType {
 	case MINUS:
-		return -right.(float64)
+		return -right.(float64), nil
 	case BANG:
-		return !i.isTruthy(right)
+		value, err := i.isTruthy(right)
+
+		return !value, err
 	}
 
 	// unreachable
-	return nil
+	return nil, nil
 }
 
-func (i *Interpreter) evaluate(expr Expr) any {
+func (i *Interpreter) evaluate(expr Expr) (any, LoxError) {
 	return expr.Accept(i)
 }
-func (i *Interpreter) isTruthy(object any) bool {
+func (i *Interpreter) isTruthy(object any) (bool, LoxError) {
 	// false and nil is false, everything else is true
 	if object == nil {
-		return false
+		return false, nil
 	}
 	switch v := object.(type) {
 	case bool:
-		return v
+		return v, nil
 	default:
-		return true
+		return true, nil
 	}
 }
-func (i *Interpreter) isEqual(a, b any) bool {
+func (i *Interpreter) isEqual(a, b any) (bool, LoxError) {
 	// TODO: would just "return a == b" be enough in Golang?
 	if a == nil && b == nil {
-		return true
+		return true, nil
 	}
 	if a == nil {
-		return false
+		return false, nil
 	}
 
-	return a == b
+	return a == b, nil
 }
-func (i *Interpreter) multiplyString(count int, s string) string {
+func (i *Interpreter) multiplyString(count int, s string) (string, *RuntimeErrorObj) {
 	result := ""
 	for range count {
 		result += s
 	}
-	return result
+	return result, nil
 }
 
-type InterpreterError struct{}
+func validateNumber(numbers ...any) bool {
+	for _, aNumber := range numbers {
+		_, ok := aNumber.(float64)
+		if !ok {
+			return false
+		}
+	}
+	return true
+}
+
+type RuntimeError interface {
+	LoxError
+	GetToken() Token
+	GetMessage() string
+}
+type RuntimeErrorObj struct {
+	token   Token
+	message string
+}
+
+func (e *RuntimeErrorObj) GetToken() Token {
+	return e.token
+}
+func (e *RuntimeErrorObj) GetMessage() string {
+	return e.message
+}

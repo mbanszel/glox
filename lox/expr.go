@@ -2,14 +2,14 @@
 package lox
 
 type ExprVisitor interface {
-  VisitBinaryExpr(expr BinaryExpr) any
-  VisitGroupingExpr(expr GroupingExpr) any
-  VisitLiteralExpr(expr LiteralExpr) any
-  VisitUnaryExpr(expr UnaryExpr) any
+  VisitBinaryExpr(expr BinaryExpr) (any, LoxError)
+  VisitGroupingExpr(expr GroupingExpr) (any, LoxError)
+  VisitLiteralExpr(expr LiteralExpr) (any, LoxError)
+  VisitUnaryExpr(expr UnaryExpr) (any, LoxError)
 }
 
 type Expr interface {
-  Accept(visitor ExprVisitor) any
+  Accept(visitor ExprVisitor) (any, LoxError)
 }
 
 //  -------------------------------------------------------------
@@ -27,7 +27,7 @@ func NewBinaryExpr(left Expr, operator Token, right Expr) BinaryExpr {
   }
 }
 
-func (c BinaryExpr) Accept(visitor ExprVisitor) any {
+func (c BinaryExpr) Accept(visitor ExprVisitor) (any, LoxError) {
   return visitor.VisitBinaryExpr(c)
 }
 //  -------------------------------------------------------------
@@ -41,7 +41,7 @@ func NewGroupingExpr(expression Expr) GroupingExpr {
   }
 }
 
-func (c GroupingExpr) Accept(visitor ExprVisitor) any {
+func (c GroupingExpr) Accept(visitor ExprVisitor) (any, LoxError) {
   return visitor.VisitGroupingExpr(c)
 }
 //  -------------------------------------------------------------
@@ -55,7 +55,7 @@ func NewLiteralExpr(value any) LiteralExpr {
   }
 }
 
-func (c LiteralExpr) Accept(visitor ExprVisitor) any {
+func (c LiteralExpr) Accept(visitor ExprVisitor) (any, LoxError) {
   return visitor.VisitLiteralExpr(c)
 }
 //  -------------------------------------------------------------
@@ -71,6 +71,6 @@ func NewUnaryExpr(operator Token, right Expr) UnaryExpr {
   }
 }
 
-func (c UnaryExpr) Accept(visitor ExprVisitor) any {
+func (c UnaryExpr) Accept(visitor ExprVisitor) (any, LoxError) {
   return visitor.VisitUnaryExpr(c)
 }

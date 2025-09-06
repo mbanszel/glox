@@ -17,44 +17,50 @@ func NewAstRPNPrinter() AstPrinter {
 }
 
 func (p AstPrinter) Print(e Expr) string {
-	return fmt.Sprintf("%v", e.Accept(p))
+	result, err := e.Accept(p)
+	if err != nil {
+		fmt.Println("Error while printing AST")
+	}
+	return fmt.Sprintf("%v", result)
 }
 
-func (p AstPrinter) VisitBinaryExpr(expr BinaryExpr) any {
-	return p.parenthesize(expr.operator.lexeme, expr.left, expr.right)
+func (p AstPrinter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
+	return p.parenthesize(expr.operator.Lexeme, expr.left, expr.right)
 }
 
-func (p AstPrinter) VisitGroupingExpr(expr GroupingExpr) any {
+func (p AstPrinter) VisitGroupingExpr(expr GroupingExpr) (any, LoxError) {
 	return p.parenthesize("group", expr.expression)
 }
 
-func (p AstPrinter) VisitLiteralExpr(expr LiteralExpr) any {
+func (p AstPrinter) VisitLiteralExpr(expr LiteralExpr) (any, LoxError) {
 	if expr.value == nil {
-		return "nil"
+		return "nil", nil
 	}
-	return fmt.Sprintf("%v", expr.value)
+	return fmt.Sprintf("%v", expr.value), nil
 }
 
-func (p AstPrinter) VisitUnaryExpr(expr UnaryExpr) any {
-	return p.parenthesize(expr.operator.lexeme, expr.right)
+func (p AstPrinter) VisitUnaryExpr(expr UnaryExpr) (any, LoxError) {
+	return p.parenthesize(expr.operator.Lexeme, expr.right)
 }
 
-func (p AstPrinter) parenthesize(name string, expressions ...Expr) string {
+func (p AstPrinter) parenthesize(name string, expressions ...Expr) (string, LoxError) {
 	var out string
 	if p.RPN {
 		for _, e := range expressions {
-			out += fmt.Sprintf("%s", e.Accept(p))
+			res, _ := e.Accept(p)
+			out += fmt.Sprintf("%s", res)
 			out += " "
 		}
 		out += name
 
-		return out
+		return out, nil
 	}
 	out = fmt.Sprintf("(%s", name)
 	for _, e := range expressions {
 		out += " "
-		out += fmt.Sprintf("%s", e.Accept(p))
+		res, _ := e.Accept(p)
+		out += fmt.Sprintf("%s", res)
 	}
 	out += ")"
-	return out
+	return out, nil
 }
