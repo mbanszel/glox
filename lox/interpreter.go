@@ -23,10 +23,10 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 
 	switch expr.operator.TokenType {
 	case MINUS:
-		if validateNumber(left, right) {
-			return left.(float64) - right.(float64), nil
+		if err:=validateNumber(expr.operator, left, right); err != nil {
+			return nil, err
 		}
-		return nil, &RuntimeErrorObj{expr.operator, "has invalid operands"}
+		return left.(float64) - right.(float64), nil
 	case PLUS:
 		right_num, right_num_ok := right.(float64)
 		left_num, left_num_ok := left.(float64)
@@ -39,7 +39,10 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 		case left_str_ok && right_str_ok:
 			return left_str + right_str, nil
 		default:
-			panic("Incompatible types for +: both must be either string or number")
+			return nil, &RuntimeErrorObj{
+				expr.operator,
+				"Operands must be numbers or strings",
+			}
 		}
 	case STAR:
 		right_num, right_num_ok := right.(float64)
@@ -55,17 +58,35 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 		case right_num_ok && left_str_ok:
 			return i.multiplyString(int(right_num), left_str)
 		default:
-			panic("Cannot multiply string by string")
+			return nil, &RuntimeErrorObj{
+				expr.operator,
+				"Cannot multiply string by string",
+			}
 		}
 	case SLASH:
+		if err:=validateNumber(expr.operator, left, right); err != nil {
+			return nil, err
+		}
 		return left.(float64) / right.(float64), nil
 	case GREATER:
+		if err:=validateNumber(expr.operator, left, right); err != nil {
+			return nil, err
+		}
 		return left.(float64) > right.(float64), nil
 	case GREATER_EQUAL:
+		if err:=validateNumber(expr.operator, left, right); err != nil {
+			return nil, err
+		}
 		return left.(float64) >= right.(float64), nil
 	case LESS:
+		if err:=validateNumber(expr.operator, left, right); err != nil {
+			return nil, err
+		}
 		return left.(float64) < right.(float64), nil
 	case LESS_EQUAL:
+		if err:=validateNumber(expr.operator, left, right); err != nil {
+			return nil, err
+		}
 		return left.(float64) <= right.(float64), nil
 	case BANG_EQUAL:
 		value, err := i.isEqual(left, right)
@@ -124,7 +145,7 @@ func (i *Interpreter) isEqual(a, b any) (bool, LoxError) {
 
 	return a == b, nil
 }
-func (i *Interpreter) multiplyString(count int, s string) (string, *RuntimeErrorObj) {
+func (i *Interpreter) multiplyString(count int, s string) (string, RuntimeError) {
 	result := ""
 	for range count {
 		result += s
@@ -132,14 +153,14 @@ func (i *Interpreter) multiplyString(count int, s string) (string, *RuntimeError
 	return result, nil
 }
 
-func validateNumber(numbers ...any) bool {
+func validateNumber(operator Token, numbers ...any) RuntimeError {
 	for _, aNumber := range numbers {
 		_, ok := aNumber.(float64)
 		if !ok {
-			return false
+			return &RuntimeErrorObj{operator, "Operands must be numbers."}
 		}
 	}
-	return true
+	return nil
 }
 
 type RuntimeError interface {
@@ -158,3 +179,5 @@ func (e *RuntimeErrorObj) GetToken() Token {
 func (e *RuntimeErrorObj) GetMessage() string {
 	return e.message
 }
+
+
