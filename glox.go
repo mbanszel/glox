@@ -8,6 +8,8 @@ import (
 	"github.com/mbanszel/glox/lox"
 )
 
+var interpreter = lox.NewIterpreter()
+
 func run(source string) {
 	scanner := lox.NewScanner(source)
 	tokens := scanner.ScanTokens()
@@ -17,29 +19,8 @@ func run(source string) {
 	// }
 	parser := lox.NewParser(tokens)
 	expression := parser.Parse()
-
-	if lox.HadError {
-		return
-	}
-
-	fmt.Println(lox.NewAstPrinter().Print(expression))
-
-	interpreter := lox.NewIterpreter()
-	result, err := interpreter.Interpret(expression)
-	if err != nil {
-		rtError := err.(lox.RuntimeError)
-		token := rtError.GetToken()
-		lox.Report(
-			token.Line,
-			token.Lexeme,
-			fmt.Sprintf(
-				"Runtime error: %s",
-				rtError.GetMessage(),
-			),
-		)
-		lox.HadError = false
-	}
-	fmt.Printf("%v\n", result)
+	// fmt.Println(lox.NewAstPrinter().Print(expression))
+	interpreter.Interpret(expression)
 }
 
 func runFile(filename string) {
@@ -51,7 +32,10 @@ func runFile(filename string) {
 
 	run(string(bytes))
 	if lox.HadError {
-		panic("exiting")
+		os.Exit(65)
+	}
+	if lox.HadRuntimeError {
+		os.Exit(70)
 	}
 
 }

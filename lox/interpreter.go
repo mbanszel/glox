@@ -1,18 +1,27 @@
 package lox
 
+import (
+	"fmt"
+)
+
 type Interpreter struct{}
 
 func NewIterpreter() *Interpreter {
 	return &Interpreter{}
 }
 
-func (i *Interpreter) Interpret(expr Expr) (any, LoxError) {
-	res, err := expr.Accept(i)
-	return res, err
+func (i *Interpreter) Interpret(expr Expr) {
+	res, err := i.evaluate(expr)
+	if err!=nil {
+		runtimeError(err.(RuntimeError))
+	} else {
+		fmt.Println(i.stringify(res))
+	}
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 	left, err := i.evaluate(expr.left)
+	var numbers []float64
 	if err != nil {
 		return nil, err
 	}
@@ -23,10 +32,10 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 
 	switch expr.operator.TokenType {
 	case MINUS:
-		if err:=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
-		return left.(float64) - right.(float64), nil
+		return numbers[0] - numbers[1], nil
 	case PLUS:
 		right_num, right_num_ok := right.(float64)
 		left_num, left_num_ok := left.(float64)
@@ -64,30 +73,36 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 			}
 		}
 	case SLASH:
-		if err:=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
-		return left.(float64) / right.(float64), nil
+		if numbers[1] == 0 {
+			return nil, &RuntimeErrorObj{
+				expr.operator,
+				"Division by zero.",
+			}
+		}
+		return numbers[0] / numbers[1], nil
 	case GREATER:
-		if err:=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
-		return left.(float64) > right.(float64), nil
+		return numbers[0] > numbers[1], nil
 	case GREATER_EQUAL:
-		if err:=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
-		return left.(float64) >= right.(float64), nil
+		return numbers[0] >= numbers[1], nil
 	case LESS:
-		if err:=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
-		return left.(float64) < right.(float64), nil
+		return numbers[0] < numbers[1], nil
 	case LESS_EQUAL:
-		if err:=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
-		return left.(float64) <= right.(float64), nil
+		return numbers[0] <= numbers[1], nil
 	case BANG_EQUAL:
 		value, err := i.isEqual(left, right)
 		return !value, err
@@ -145,6 +160,14 @@ func (i *Interpreter) isEqual(a, b any) (bool, LoxError) {
 
 	return a == b, nil
 }
+func (i *Interpreter) stringify(object any) string {
+	if (object == nil) {return "nil"}
+
+	if float_val, ok := object.(float64); ok {
+		object = fmt.Sprintf("%v", float_val)
+	}
+	return fmt.Sprintf("%v", object)
+}
 func (i *Interpreter) multiplyString(count int, s string) (string, RuntimeError) {
 	result := ""
 	for range count {
@@ -153,14 +176,17 @@ func (i *Interpreter) multiplyString(count int, s string) (string, RuntimeError)
 	return result, nil
 }
 
-func validateNumber(operator Token, numbers ...any) RuntimeError {
+func validateNumber(operator Token, numbers ...any) ([]float64, RuntimeError) {
+	converted := []float64{}
+
 	for _, aNumber := range numbers {
-		_, ok := aNumber.(float64)
+		f, ok := aNumber.(float64)
+		converted = append(converted, f)
 		if !ok {
-			return &RuntimeErrorObj{operator, "Operands must be numbers."}
+			return []float64{}, &RuntimeErrorObj{operator, "Operands must be numbers."}
 		}
 	}
-	return nil
+	return converted, nil
 }
 
 type RuntimeError interface {

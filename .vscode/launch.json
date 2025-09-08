@@ -19,7 +19,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/glox.go",
-            "args": ["examples/expression1.glox"]
+            "args": ["examples/example_error.glox"]
         },
         {
             "name": "Launch generate_ast",

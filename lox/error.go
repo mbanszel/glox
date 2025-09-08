@@ -2,9 +2,11 @@ package lox
 
 import (
 	"fmt"
+	"os"
 )
 
 var HadError = false
+var HadRuntimeError = false
 
 func Emit(line int, message string) {
 	Report(line, "", message)
@@ -28,3 +30,8 @@ func Error(token Token, message string) {
 }
 
 type LoxError interface{}
+
+func runtimeError(err RuntimeError) {
+	fmt.Fprintf(os.Stderr, "[line %v] %s\n", err.GetToken().Line, err.GetMessage())
+	HadRuntimeError = true
+}
