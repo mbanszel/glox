@@ -29,7 +29,17 @@ func Error(token Token, message string) {
 	}
 }
 
-type LoxError interface{}
+func parserError(err ParserError) {
+	token := err.GetToken()
+	message := err.GetMessage()
+	fmt.Fprintf(os.Stderr, "[line %v] %s at %s\n", token.Line, message, token.Lexeme)
+	HadError = true
+}
+
+type LoxError interface{
+	GetToken() Token
+	GetMessage() string
+}
 
 func runtimeError(err RuntimeError) {
 	fmt.Fprintf(os.Stderr, "[line %v] %s\n", err.GetToken().Line, err.GetMessage())

@@ -10,12 +10,13 @@ func NewIterpreter() *Interpreter {
 	return &Interpreter{}
 }
 
-func (i *Interpreter) Interpret(expr Expr) {
-	res, err := i.evaluate(expr)
-	if err!=nil {
-		runtimeError(err.(RuntimeError))
-	} else {
-		fmt.Println(i.stringify(res))
+func (i *Interpreter) Interpret(statements []Stmt) {
+	for _, statement := range statements {
+		_, err := i.execute(statement)
+		if err != nil {
+			fmt.Println("Error...")
+			runtimeError(err.(RuntimeError))
+		}
 	}
 }
 
@@ -32,7 +33,7 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 
 	switch expr.operator.TokenType {
 	case MINUS:
-		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err = validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
 		return numbers[0] - numbers[1], nil
@@ -73,7 +74,7 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 			}
 		}
 	case SLASH:
-		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err = validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
 		if numbers[1] == 0 {
@@ -84,22 +85,22 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 		}
 		return numbers[0] / numbers[1], nil
 	case GREATER:
-		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err = validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
 		return numbers[0] > numbers[1], nil
 	case GREATER_EQUAL:
-		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err = validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
 		return numbers[0] >= numbers[1], nil
 	case LESS:
-		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err = validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
 		return numbers[0] < numbers[1], nil
 	case LESS_EQUAL:
-		if numbers, err=validateNumber(expr.operator, left, right); err != nil {
+		if numbers, err = validateNumber(expr.operator, left, right); err != nil {
 			return nil, err
 		}
 		return numbers[0] <= numbers[1], nil
@@ -134,6 +135,23 @@ func (i *Interpreter) VisitUnaryExpr(expr UnaryExpr) (any, LoxError) {
 	return nil, nil
 }
 
+// ------------------------------------------------------------------------------------------
+func (i *Interpreter) VisitExpressionStmt(stmt ExpressionStmt) (any, LoxError) {
+	v, err := i.evaluate(stmt.expression)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+func (i *Interpreter) VisitPrintStmt(stmt PrintStmt) (any, LoxError) {
+	v, err := i.evaluate(stmt.expression)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(i.stringify(v))
+	return v, nil
+}
+
 func (i *Interpreter) evaluate(expr Expr) (any, LoxError) {
 	return expr.Accept(i)
 }
@@ -161,7 +179,9 @@ func (i *Interpreter) isEqual(a, b any) (bool, LoxError) {
 	return a == b, nil
 }
 func (i *Interpreter) stringify(object any) string {
-	if (object == nil) {return "nil"}
+	if object == nil {
+		return "nil"
+	}
 
 	if float_val, ok := object.(float64); ok {
 		object = fmt.Sprintf("%v", float_val)
@@ -206,4 +226,6 @@ func (e *RuntimeErrorObj) GetMessage() string {
 	return e.message
 }
 
-
+func (i *Interpreter) execute(stmt Stmt) (any, LoxError) {
+	return stmt.Accept(i)
+}

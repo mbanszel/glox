@@ -11,12 +11,22 @@ func NewParser(tokens []Token) *Parser {
 	return &Parser{tokens: tokens, current: 0}
 }
 
-func (p *Parser) Parse() Expr {
-	expr, err := p.expression()
-	if err != nil {
-		return nil
+func (p *Parser) Parse() []Stmt {
+	// expr, err := p.expression()
+	// if err != nil {
+	// 	return nil
+	// }
+
+	statements := []Stmt{}
+	for !p.isAtEnd() {
+		stmt, err := p.statement()
+		if err != nil {
+			parserError(err)
+			p.advance()
+		}
+		statements = append(statements, stmt)
 	}
-	return expr
+	return statements
 }
 
 // The lox grammar:
@@ -138,7 +148,7 @@ func (p *Parser) primary() (Expr, ParserError) {
 		}
 		return NewGroupingExpr(expr), nil
 	default:
-		return nil, p.error(p.peek(), "Expect statement.")
+		return nil, p.error("Expect statement.")
 	}
 }
 
@@ -149,7 +159,7 @@ func (p *Parser) consume(tokenType TokenType, message string) (Token, ParserErro
 		return p.advance(), nil
 	}
 
-	return Token{}, p.error(p.peek(), message)
+	return Token{}, p.error(message)
 
 }
 
@@ -207,12 +217,53 @@ func (p *Parser) synchronize() {
 	}
 }
 
-func (p *Parser) error(token Token, message string) ParserError {
-	Error(token, message)
-	return &ParserErrorObj{}
+func (p *Parser) error(message string) ParserError {
+	token := p.peek()
+	return &ParserErrorObj{
+		Token: token,
+		Message: message,
+	}
 }
 
 type ParserError interface {
 	LoxError
 }
-type ParserErrorObj struct{}
+
+type ParserErrorObj struct{
+	Token Token
+	Message string
+}
+
+func (pe ParserErrorObj) GetToken() Token {
+	return pe.Token
+}
+
+func (pe ParserErrorObj) GetMessage() string {
+	return pe.Message
+}
+
+
+func (p *Parser) statement() (Stmt, ParserError) {
+	if p.match(PRINT) {return p.printStatement()}
+
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() (Stmt, ParserError) {
+	value, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	p.consume(SEMICOLON, "Expect ';' after value.")
+	return NewPrintStmt(value), nil
+}
+
+func (p *Parser) expressionStatement() (Stmt, ParserError) {
+	expr, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+	p.consume(SEMICOLON, "Expect ';' after value.")
+	return NewExpressionStmt(expr), nil
+
+}

@@ -18,9 +18,12 @@ func run(source string) {
 	// 	fmt.Println(a_token)
 	// }
 	parser := lox.NewParser(tokens)
-	expression := parser.Parse()
+	statements := parser.Parse()
 	// fmt.Println(lox.NewAstPrinter().Print(expression))
-	interpreter.Interpret(expression)
+	if lox.HadError {
+		return
+	}
+	interpreter.Interpret(statements)
 }
 
 func runFile(filename string) {

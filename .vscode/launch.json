@@ -22,6 +22,22 @@
             "args": ["examples/example_error.glox"]
         },
         {
+            "name": "Launch glox wrong1.glox",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/glox.go",
+            "args": ["examples/wrong1.glox"]
+        },
+        {
+            "name": "Launch glox statements1.glox",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/glox.go",
+            "args": ["examples/statements1.glox"]
+        },
+        {
             "name": "Launch generate_ast",
             "type": "go",
             "request": "launch",
