@@ -1,14 +1,17 @@
 package lox
 
 type Environment struct {
+	Enclosing *Environment
 	Values map[string]any
 }
 
-func NewEnvironment() *Environment {
+func NewEnvironment(enclosing *Environment) *Environment {
 	return &Environment{
+		Enclosing: enclosing,
 		Values: make(map[string]any),
 	}
 }
+
 
 func (e *Environment) define(name string, value any) {
 	e.Values[name] = value
@@ -19,7 +22,9 @@ func (e *Environment) assign(name Token, value any) (any, RuntimeError) {
 		e.Values[name.Lexeme] = value
 		return value, nil
 	}
-
+	if e.Enclosing != nil {
+		return e.assign(name, value)
+	}
 	return nil, &RuntimeErrorObj{
 		name,
 		"Undefined variable '" + name.Lexeme + "'",
@@ -27,9 +32,11 @@ func (e *Environment) assign(name Token, value any) (any, RuntimeError) {
 }
 
 func (e *Environment) get(name Token) (any, RuntimeError) {
-	value, ok := e.Values[name.Lexeme]
-	if !ok {
-		return "", &RuntimeErrorObj{name, "Undefined variable '" + name.Lexeme}
+	if value, ok := e.Values[name.Lexeme]; ok {
+		return value, nil
 	}
-	return value, nil
+	if e.Enclosing != nil {
+		return e.get(name)
+	}
+	return "", &RuntimeErrorObj{name, "Undefined variable '" + name.Lexeme}
 }

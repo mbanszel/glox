@@ -20,7 +20,7 @@ func (i *Interpreter) VisitAssignmentExpr(expr AssignmentExpr) (any, LoxError) {
 
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		environment: NewEnvironment(),
+		environment: NewEnvironment(nil),
 	}
 }
 
