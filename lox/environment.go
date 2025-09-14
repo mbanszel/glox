@@ -12,7 +12,6 @@ func NewEnvironment(enclosing *Environment) *Environment {
 	}
 }
 
-
 func (e *Environment) define(name string, value any) {
 	e.Values[name] = value
 }
@@ -23,7 +22,7 @@ func (e *Environment) assign(name Token, value any) (any, RuntimeError) {
 		return value, nil
 	}
 	if e.Enclosing != nil {
-		return e.assign(name, value)
+		return e.Enclosing.assign(name, value)
 	}
 	return nil, &RuntimeErrorObj{
 		name,
@@ -36,7 +35,7 @@ func (e *Environment) get(name Token) (any, RuntimeError) {
 		return value, nil
 	}
 	if e.Enclosing != nil {
-		return e.get(name)
+		return e.Enclosing.get(name)
 	}
 	return "", &RuntimeErrorObj{name, "Undefined variable '" + name.Lexeme}
 }

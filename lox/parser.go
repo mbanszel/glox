@@ -306,8 +306,32 @@ func (p *Parser) varDeclaration() (Stmt, ParserError) {
 
 func (p *Parser) statement() (Stmt, ParserError) {
 	if p.match(PRINT) {return p.printStatement()}
+	if p.match(LEFT_BRACE) {
+		stmts, err := p.block()
+		if err != nil {
+			return nil, err
+		}
+		return NewBlockStmt(stmts), nil
+	}
 
 	return p.expressionStatement()
+}
+
+func (p *Parser) block() ([]Stmt, ParserError) {
+	var statements []Stmt
+
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+		dclr, err := p.declaration()
+		if err != nil {
+			return statements, err
+		}
+		statements = append(statements, dclr)
+	}
+	_, err := p.consume(RIGHT_BRACE, "Expect '}' after block")
+	if err != nil {
+		return nil, err
+	}
+	return statements, nil
 }
 
 func (p *Parser) printStatement() (Stmt, ParserError) {

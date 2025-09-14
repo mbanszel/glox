@@ -27,6 +27,7 @@ func main() {
 	defineAst(outputDir, "Stmt", []string{
 		"Expression : expression Expr",
 		"Print      : expression Expr",
+		"Block      : statements []Stmt",
 		"Var        : name Token, initializer Expr",
 	})
 }

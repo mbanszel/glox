@@ -254,3 +254,29 @@ func (e *RuntimeErrorObj) GetMessage() string {
 func (i *Interpreter) execute(stmt Stmt) (any, LoxError) {
 	return stmt.Accept(i)
 }
+
+func (i *Interpreter) VisitBlockStmt(stmt BlockStmt) (any, LoxError) {
+	return i.executeBlock(stmt.statements, NewEnvironment(i.environment))
+}
+
+func (i *Interpreter) descope() {
+	// leave the current lexical scope
+	if i.environment.Enclosing == nil {
+		return
+	}
+
+	i.environment = i.environment.Enclosing
+}
+
+func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) (any, RuntimeError) {
+	i.environment = environment
+	defer i.descope()
+
+	for _, stmt := range statements {
+		value, err := i.execute(stmt)
+		if err != nil {
+			return value, err
+		}
+	}
+	return nil, nil
+}
