@@ -2,12 +2,26 @@ package lox
 
 import (
 	"fmt"
+	"strings"
 )
 
-type Interpreter struct{}
+type Interpreter struct {
+	environment *Environment
+}
 
-func NewIterpreter() *Interpreter {
-	return &Interpreter{}
+// VisitAssignmentExpr implements ExprVisitor.
+func (i *Interpreter) VisitAssignmentExpr(expr AssignmentExpr) (any, LoxError) {
+	value, err := i.evaluate(expr.value)
+	if err != nil {
+		return nil, err
+	}
+	return i.environment.assign(expr.name, value)
+}
+
+func NewInterpreter() *Interpreter {
+	return &Interpreter{
+		environment: NewEnvironment(),
+	}
 }
 
 func (i *Interpreter) Interpret(statements []Stmt) {
@@ -132,7 +146,10 @@ func (i *Interpreter) VisitUnaryExpr(expr UnaryExpr) (any, LoxError) {
 	}
 
 	// unreachable
-	return nil, nil
+	return nil, &RuntimeErrorObj{expr.operator, "Unexpected unary operator"}
+}
+func (i *Interpreter) VisitVariableExpr(expr VariableExpr) (any, LoxError) {
+	return i.environment.get(expr.name)
 }
 
 // ------------------------------------------------------------------------------------------
@@ -150,6 +167,18 @@ func (i *Interpreter) VisitPrintStmt(stmt PrintStmt) (any, LoxError) {
 	}
 	fmt.Println(i.stringify(v))
 	return v, nil
+}
+func (i *Interpreter) VisitVarStmt(stmt VarStmt) (any, LoxError) {
+	var value any
+	var err LoxError
+	if stmt.initializer != nil {
+		value, err = i.evaluate(stmt.initializer)
+		if err != nil {
+			return nil, err
+		}
+	}
+	i.environment.define(stmt.name.Lexeme, value)
+	return nil, nil
 }
 
 func (i *Interpreter) evaluate(expr Expr) (any, LoxError) {
@@ -182,22 +211,18 @@ func (i *Interpreter) stringify(object any) string {
 	if object == nil {
 		return "nil"
 	}
-
-	if float_val, ok := object.(float64); ok {
-		object = fmt.Sprintf("%v", float_val)
-	}
 	return fmt.Sprintf("%v", object)
 }
 func (i *Interpreter) multiplyString(count int, s string) (string, RuntimeError) {
-	result := ""
+	var sb strings.Builder
 	for range count {
-		result += s
+		sb.WriteString(s)
 	}
-	return result, nil
+	return sb.String(), nil
 }
 
 func validateNumber(operator Token, numbers ...any) ([]float64, RuntimeError) {
-	converted := []float64{}
+	converted := make([]float64, 0, len(numbers))
 
 	for _, aNumber := range numbers {
 		f, ok := aNumber.(float64)

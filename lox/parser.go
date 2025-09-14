@@ -19,7 +19,7 @@ func (p *Parser) Parse() []Stmt {
 
 	statements := []Stmt{}
 	for !p.isAtEnd() {
-		stmt, err := p.statement()
+		stmt, err := p.declaration()
 		if err != nil {
 			parserError(err)
 			p.advance()
@@ -42,7 +42,30 @@ func (p *Parser) Parse() []Stmt {
 //                | "(" expression ")" ;
 
 func (p *Parser) expression() (Expr, ParserError) {
-	return p.equality()
+	return p.assignment();
+}
+
+func (p *Parser) assignment() (Expr, ParserError) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(EQUAL) {
+		equals := p.previous()
+		value, err := p.assignment()
+		if err != nil {
+			return nil, err
+		}
+
+		variable_expr, ok := expr.(VariableExpr)
+		if ok {
+			name := variable_expr.name
+			return NewAssignmentExpr(name, value), nil
+		}
+		Error(equals, "Invalid assignment target")
+	}
+	return expr, nil
 }
 
 func (p *Parser) equality() (Expr, ParserError) {
@@ -137,6 +160,8 @@ func (p *Parser) primary() (Expr, ParserError) {
 		return NewLiteralExpr(nil), nil
 	case p.match(NUMBER, STRING):
 		return NewLiteralExpr(p.previous().Literal), nil
+	case p.match(IDENTIFIER):
+		return NewVariableExpr(p.previous()), nil
 	case p.match(LEFT_PAREN):
 		expr, err := p.expression()
 		if err != nil {
@@ -240,6 +265,42 @@ func (pe ParserErrorObj) GetToken() Token {
 
 func (pe ParserErrorObj) GetMessage() string {
 	return pe.Message
+}
+
+func (p *Parser) declaration() (Stmt, ParserError) {
+	var stmt Stmt
+	var err ParserError
+	if p.match(VAR) {
+		stmt, err = p.varDeclaration()
+	} else {
+		stmt, err = p.statement()
+	}
+	if err != nil {
+		p.synchronize()
+	}
+	return stmt, err
+	
+}
+
+func (p *Parser) varDeclaration() (Stmt, ParserError) {
+	name, err := p.consume(IDENTIFIER, "Expect variable name")
+	if err != nil {
+		return nil, err
+	}
+	var initializer Expr
+	if p.match(EQUAL) {
+		initializer, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	_, err = p.consume(SEMICOLON, "Expect ';' after variable declaration")
+	if err != nil {
+		return nil, err
+	}
+
+	return NewVarStmt(name, initializer), nil
 }
 
 

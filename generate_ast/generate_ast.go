@@ -16,15 +16,18 @@ func main() {
 	fmt.Printf("output directory: %s\n", outputDir)
 
 	defineAst(outputDir, "Expr", []string{
-		"Binary	  : left Expr, operator Token, right Expr",
-		"Grouping : expression Expr",
-		"Literal  : value any",
-		"Unary    : operator Token, right Expr",
+		"Assignment : name Token, value Expr",
+		"Binary	    : left Expr, operator Token, right Expr",
+		"Grouping   : expression Expr",
+		"Literal    : value any",
+		"Unary      : operator Token, right Expr",
+		"Variable   : name Token",
 	})
 
 	defineAst(outputDir, "Stmt", []string{
 		"Expression : expression Expr",
 		"Print      : expression Expr",
+		"Var        : name Token, initializer Expr",
 	})
 }
 

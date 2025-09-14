@@ -8,6 +8,11 @@ type AstPrinter struct {
 	RPN bool
 }
 
+// VisitAssignmentExpr implements ExprVisitor.
+func (p AstPrinter) VisitAssignmentExpr(expr AssignmentExpr) (any, LoxError) {
+	panic("unimplemented")
+}
+
 func NewAstPrinter() AstPrinter {
 	return AstPrinter{RPN: false}
 }
@@ -41,6 +46,14 @@ func (p AstPrinter) VisitLiteralExpr(expr LiteralExpr) (any, LoxError) {
 
 func (p AstPrinter) VisitUnaryExpr(expr UnaryExpr) (any, LoxError) {
 	return p.parenthesize(expr.operator.Lexeme, expr.right)
+}
+
+func (p AstPrinter) VisitVariableExpr(expr VariableExpr) (any, LoxError) {
+	return expr.name.Lexeme, nil
+}
+
+func (p AstPrinter) VisitVarStmt(stmt VarStmt) (any, LoxError) {
+	return p.parenthesize(fmt.Sprintf("(var %s)", stmt.initializer))
 }
 
 func (p AstPrinter) parenthesize(name string, expressions ...Expr) (string, LoxError) {

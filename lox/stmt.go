@@ -4,6 +4,7 @@ package lox
 type StmtVisitor interface {
   VisitExpressionStmt(stmt ExpressionStmt) (any, LoxError)
   VisitPrintStmt(stmt PrintStmt) (any, LoxError)
+  VisitVarStmt(stmt VarStmt) (any, LoxError)
 }
 
 type Stmt interface {
@@ -37,4 +38,20 @@ func NewPrintStmt(expression Expr) PrintStmt {
 
 func (c PrintStmt) Accept(visitor StmtVisitor) (any, LoxError) {
   return visitor.VisitPrintStmt(c)
+}
+//  -------------------------------------------------------------
+type VarStmt struct {
+  name Token
+  initializer Expr
+}
+
+func NewVarStmt(name Token, initializer Expr) VarStmt {
+  return VarStmt{
+    name:name,
+    initializer:initializer,
+  }
+}
+
+func (c VarStmt) Accept(visitor StmtVisitor) (any, LoxError) {
+  return visitor.VisitVarStmt(c)
 }

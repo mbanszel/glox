@@ -8,7 +8,7 @@ import (
 	"github.com/mbanszel/glox/lox"
 )
 
-var interpreter = lox.NewIterpreter()
+var interpreter = lox.NewInterpreter()
 
 func run(source string) {
 	scanner := lox.NewScanner(source)
@@ -76,7 +76,8 @@ func runPrompt() {
 func main() {
 	if len(os.Args) > 2 {
 		fmt.Println("Usage: glox [script]")
-		panic("exiting")
+		// TODO: diceide on the exit code
+		os.Exit(1)
 	} else if len(os.Args) == 2 {
 		runFile(os.Args[1])
 	} else {

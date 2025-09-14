@@ -2,16 +2,34 @@
 package lox
 
 type ExprVisitor interface {
+  VisitAssignmentExpr(expr AssignmentExpr) (any, LoxError)
   VisitBinaryExpr(expr BinaryExpr) (any, LoxError)
   VisitGroupingExpr(expr GroupingExpr) (any, LoxError)
   VisitLiteralExpr(expr LiteralExpr) (any, LoxError)
   VisitUnaryExpr(expr UnaryExpr) (any, LoxError)
+  VisitVariableExpr(expr VariableExpr) (any, LoxError)
 }
 
 type Expr interface {
   Accept(visitor ExprVisitor) (any, LoxError)
 }
 
+//  -------------------------------------------------------------
+type AssignmentExpr struct {
+  name Token
+  value Expr
+}
+
+func NewAssignmentExpr(name Token, value Expr) AssignmentExpr {
+  return AssignmentExpr{
+    name:name,
+    value:value,
+  }
+}
+
+func (c AssignmentExpr) Accept(visitor ExprVisitor) (any, LoxError) {
+  return visitor.VisitAssignmentExpr(c)
+}
 //  -------------------------------------------------------------
 type BinaryExpr struct {
   left Expr
@@ -73,4 +91,18 @@ func NewUnaryExpr(operator Token, right Expr) UnaryExpr {
 
 func (c UnaryExpr) Accept(visitor ExprVisitor) (any, LoxError) {
   return visitor.VisitUnaryExpr(c)
+}
+//  -------------------------------------------------------------
+type VariableExpr struct {
+  name Token
+}
+
+func NewVariableExpr(name Token) VariableExpr {
+  return VariableExpr{
+    name:name,
+  }
+}
+
+func (c VariableExpr) Accept(visitor ExprVisitor) (any, LoxError) {
+  return visitor.VisitVariableExpr(c)
 }
