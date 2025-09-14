@@ -6,6 +6,7 @@ type ExprVisitor interface {
   VisitBinaryExpr(expr BinaryExpr) (any, LoxError)
   VisitGroupingExpr(expr GroupingExpr) (any, LoxError)
   VisitLiteralExpr(expr LiteralExpr) (any, LoxError)
+  VisitLogicalExpr(expr LogicalExpr) (any, LoxError)
   VisitUnaryExpr(expr UnaryExpr) (any, LoxError)
   VisitVariableExpr(expr VariableExpr) (any, LoxError)
 }
@@ -75,6 +76,24 @@ func NewLiteralExpr(value any) LiteralExpr {
 
 func (c LiteralExpr) Accept(visitor ExprVisitor) (any, LoxError) {
   return visitor.VisitLiteralExpr(c)
+}
+//  -------------------------------------------------------------
+type LogicalExpr struct {
+  left Expr
+  operator Token
+  right Expr
+}
+
+func NewLogicalExpr(left Expr, operator Token, right Expr) LogicalExpr {
+  return LogicalExpr{
+    left:left,
+    operator:operator,
+    right:right,
+  }
+}
+
+func (c LogicalExpr) Accept(visitor ExprVisitor) (any, LoxError) {
+  return visitor.VisitLogicalExpr(c)
 }
 //  -------------------------------------------------------------
 type UnaryExpr struct {

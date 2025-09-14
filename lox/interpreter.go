@@ -133,6 +133,31 @@ func (i *Interpreter) VisitGroupingExpr(expr GroupingExpr) (any, LoxError) {
 func (i *Interpreter) VisitLiteralExpr(expr LiteralExpr) (any, LoxError) {
 	return expr.value, nil
 }
+func (i *Interpreter) VisitLogicalExpr(expr LogicalExpr) (any, LoxError) {
+	left, err := i.evaluate(expr.left)
+	if err != nil {
+		return nil, err
+	}
+
+	left_truthiness, err := i.isTruthy(left)
+	if err != nil {
+		return nil, err
+	}
+	if (expr.operator.TokenType == OR) {
+		if left_truthiness {
+			return left, nil
+		}
+	} else {
+		if !left_truthiness {
+			return left, nil
+		}
+	}
+	right, err := i.evaluate(expr.right)
+	if err != nil {
+		return nil, err
+	}
+	return right, nil
+}
 func (i *Interpreter) VisitUnaryExpr(expr UnaryExpr) (any, LoxError) {
 	right, _ := i.evaluate(expr.right)
 
@@ -159,6 +184,24 @@ func (i *Interpreter) VisitExpressionStmt(stmt ExpressionStmt) (any, LoxError) {
 		return nil, err
 	}
 	return v, nil
+}
+func (i *Interpreter) VisitIfStmt(stmt IfStmt) (any, LoxError) {
+	val, err := i.evaluate(stmt.condition)
+	if err != nil {
+		return nil, err
+	}
+
+	condition, err := i.isTruthy(val)
+	if err != nil {
+		return nil, err
+	}
+
+	if condition {
+		return i.execute(stmt.thenBranch)
+	} else if stmt.elseBranch != nil {
+		return i.execute(stmt.elseBranch)
+	}
+	return nil, nil
 }
 func (i *Interpreter) VisitPrintStmt(stmt PrintStmt) (any, LoxError) {
 	v, err := i.evaluate(stmt.expression)

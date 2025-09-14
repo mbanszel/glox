@@ -1,5 +1,6 @@
 package lox
 
+
 // recursive descent parser for (g)lox interpreter
 
 type Parser struct {
@@ -46,7 +47,7 @@ func (p *Parser) expression() (Expr, ParserError) {
 }
 
 func (p *Parser) assignment() (Expr, ParserError) {
-	expr, err := p.equality()
+	expr, err := p.or()
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +65,42 @@ func (p *Parser) assignment() (Expr, ParserError) {
 			return NewAssignmentExpr(name, value), nil
 		}
 		Error(equals, "Invalid assignment target")
+	}
+	return expr, nil
+}
+
+func (p *Parser) or() (Expr, ParserError) {
+	expr, err := p.and()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(OR) {
+		operator := p.previous()
+		right, err := p.and()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = NewLogicalExpr(expr, operator, right)
+	}
+	return expr, nil
+}
+
+func (p *Parser) and() (Expr, ParserError) {
+	expr, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(AND) {
+		operator := p.previous()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = NewLogicalExpr(expr, operator, right)
 	}
 	return expr, nil
 }
@@ -305,6 +342,7 @@ func (p *Parser) varDeclaration() (Stmt, ParserError) {
 
 
 func (p *Parser) statement() (Stmt, ParserError) {
+	if p.match(IF) {return p.ifStatement()}
 	if p.match(PRINT) {return p.printStatement()}
 	if p.match(LEFT_BRACE) {
 		stmts, err := p.block()
@@ -351,4 +389,34 @@ func (p *Parser) expressionStatement() (Stmt, ParserError) {
 	p.consume(SEMICOLON, "Expect ';' after value.")
 	return NewExpressionStmt(expr), nil
 
+}
+
+func (p *Parser) ifStatement() (Stmt, ParserError) {
+	_, err := p.consume(LEFT_PAREN, "Expect '(' after 'if'")
+	if err != nil {
+		return nil, err
+	}
+
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(RIGHT_PAREN, "Expect ')' after 'if' condition")
+	if err != nil {
+		return nil, err
+	}
+
+	thenBranch, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+	var elseBranch Stmt
+	if p.match(ELSE) {
+		elseBranch, err = p.statement()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return NewIfStmt(condition, thenBranch, elseBranch), nil
 }

@@ -12,6 +12,16 @@ type AstPrinter struct {
 func (p AstPrinter) VisitAssignmentExpr(expr AssignmentExpr) (any, LoxError) {
 	panic("unimplemented")
 }
+func (p AstPrinter) VisitBlockStmt(expr BlockStmt) (any, LoxError) {
+	panic("unimplemented")
+}
+func (p AstPrinter) VisitIfStmt(expr BlockStmt) (any, LoxError) {
+	panic("unimplemented")
+}
+func (p AstPrinter) VisitLogicalExpr(expr LogicalExpr) (any, LoxError) {
+	panic("unimplemented")
+}
+
 
 func NewAstPrinter() AstPrinter {
 	return AstPrinter{RPN: false}
@@ -28,6 +38,8 @@ func (p AstPrinter) Print(e Expr) string {
 	}
 	return fmt.Sprintf("%v", result)
 }
+
+
 
 func (p AstPrinter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 	return p.parenthesize(expr.operator.Lexeme, expr.left, expr.right)

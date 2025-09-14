@@ -20,12 +20,14 @@ func main() {
 		"Binary	    : left Expr, operator Token, right Expr",
 		"Grouping   : expression Expr",
 		"Literal    : value any",
+		"Logical    : left Expr, operator Token, right Expr",
 		"Unary      : operator Token, right Expr",
 		"Variable   : name Token",
 	})
 
 	defineAst(outputDir, "Stmt", []string{
 		"Expression : expression Expr",
+		"If         : condition Expr, thenBranch Stmt, elseBranch Stmt",
 		"Print      : expression Expr",
 		"Block      : statements []Stmt",
 		"Var        : name Token, initializer Expr",
