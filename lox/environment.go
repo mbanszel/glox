@@ -1,5 +1,9 @@
 package lox
 
+import (
+	"fmt"
+)
+
 type Environment struct {
 	Enclosing *Environment
 	Values map[string]any
@@ -32,6 +36,12 @@ func (e *Environment) assign(name Token, value any) (any, RuntimeError) {
 
 func (e *Environment) get(name Token) (any, RuntimeError) {
 	if value, ok := e.Values[name.Lexeme]; ok {
+		if value == nil {
+			return "", &RuntimeErrorObj{
+				name,
+				fmt.Sprintf("Uninitialized variable '%s'", name.Lexeme),
+			}
+		}
 		return value, nil
 	}
 	if e.Enclosing != nil {
