@@ -342,6 +342,7 @@ func (p *Parser) varDeclaration() (Stmt, ParserError) {
 
 
 func (p *Parser) statement() (Stmt, ParserError) {
+	if p.match(FOR) {return p.forStatement()}
 	if p.match(IF) {return p.ifStatement()}
 	if p.match(PRINT) {return p.printStatement()}
 	if p.match(LEFT_BRACE) {
@@ -422,7 +423,7 @@ func (p *Parser) ifStatement() (Stmt, ParserError) {
 	return NewIfStmt(condition, thenBranch, elseBranch), nil
 }
 
-func (p Parser) whileStatement() (Stmt, ParserError) {
+func (p *Parser) whileStatement() (Stmt, ParserError) {
 	if _, err := p.consume(LEFT_PAREN, "Expect '(' after 'while'"); err != nil {
 		return nil, err
 	}
@@ -443,4 +444,89 @@ func (p Parser) whileStatement() (Stmt, ParserError) {
 
 	return NewWhileStmt(condition, body), nil
 
+}
+
+func (p *Parser) forStatement() (Stmt, ParserError) {
+	// implemented by desugaring the fancy for loop into a sequence of statements:
+	// for (initializer; condition; increment) body
+	// ->
+	// initializer;
+	// while (condition) {
+	//   body;
+	//   increment;
+	// }
+	var initializer Stmt
+	var condition Expr
+	var increment Expr
+	var body Stmt
+	var err ParserError
+
+	_, err = p.consume(LEFT_PAREN, "Expect '(' after 'for'")
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case p.match(SEMICOLON): initializer = nil
+	case p.match(VAR):
+		initializer, err = p.varDeclaration()
+		if err != nil {
+			return nil, err
+		}
+	default: 
+		initializer, err = p.expressionStatement()
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !p.check(SEMICOLON) {
+		condition, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = p.consume(SEMICOLON, "Expect ';' after loop condition")
+	if err != nil {
+		return nil, err
+	}
+
+
+	if !p.check(RIGHT_PAREN) {
+		increment, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if _, err := p.consume(RIGHT_PAREN, "expect ')' after for clauses"); err != nil {
+		return nil, err
+	}
+
+	body, err = p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	if increment != nil {
+		body = NewBlockStmt(
+			[]Stmt{
+				body,
+				NewExpressionStmt(increment),
+			},
+		)
+	}
+
+	if condition == nil {
+		condition = NewLiteralExpr(true)
+	}
+	body = NewWhileStmt(condition, body)
+	if initializer != nil {
+		body = NewBlockStmt(
+			[]Stmt{
+				initializer,
+				body,
+			},
+		)
+	}
+	return body, nil
 }
