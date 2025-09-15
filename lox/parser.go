@@ -351,6 +351,7 @@ func (p *Parser) statement() (Stmt, ParserError) {
 		}
 		return NewBlockStmt(stmts), nil
 	}
+	if p.match(WHILE) { return p.whileStatement() }
 
 	return p.expressionStatement()
 }
@@ -419,4 +420,27 @@ func (p *Parser) ifStatement() (Stmt, ParserError) {
 		}
 	}
 	return NewIfStmt(condition, thenBranch, elseBranch), nil
+}
+
+func (p Parser) whileStatement() (Stmt, ParserError) {
+	if _, err := p.consume(LEFT_PAREN, "Expect '(' after 'while'"); err != nil {
+		return nil, err
+	}
+
+	condition, err := p.expression()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := p.consume(RIGHT_PAREN, "Expect ')' after condition"); err != nil {
+		return nil, err
+	}
+
+	body, err := p.statement()
+	if err != nil {
+		return nil, err
+	}
+
+	return NewWhileStmt(condition, body), nil
+
 }

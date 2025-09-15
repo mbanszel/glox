@@ -203,6 +203,25 @@ func (i *Interpreter) VisitIfStmt(stmt IfStmt) (any, LoxError) {
 	}
 	return nil, nil
 }
+func (i *Interpreter) VisitWhileStmt(stmt WhileStmt) (any, LoxError) {
+	for {
+		val, err := i.evaluate(stmt.condition)
+		if err != nil {
+			return nil, err
+		}
+		condition, err := i.isTruthy(val)
+		if err != nil {
+			return nil, err
+		}
+		if !condition {
+			return nil, nil
+		}
+		_, err = i.execute(stmt.body)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
 func (i *Interpreter) VisitPrintStmt(stmt PrintStmt) (any, LoxError) {
 	v, err := i.evaluate(stmt.expression)
 	if err != nil {

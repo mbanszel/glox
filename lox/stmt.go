@@ -7,6 +7,7 @@ type StmtVisitor interface {
   VisitPrintStmt(stmt PrintStmt) (any, LoxError)
   VisitBlockStmt(stmt BlockStmt) (any, LoxError)
   VisitVarStmt(stmt VarStmt) (any, LoxError)
+  VisitWhileStmt(stmt WhileStmt) (any, LoxError)
 }
 
 type Stmt interface {
@@ -88,4 +89,20 @@ func NewVarStmt(name Token, initializer Expr) VarStmt {
 
 func (c VarStmt) Accept(visitor StmtVisitor) (any, LoxError) {
   return visitor.VisitVarStmt(c)
+}
+//  -------------------------------------------------------------
+type WhileStmt struct {
+  condition Expr
+  body Stmt
+}
+
+func NewWhileStmt(condition Expr, body Stmt) WhileStmt {
+  return WhileStmt{
+    condition:condition,
+    body:body,
+  }
+}
+
+func (c WhileStmt) Accept(visitor StmtVisitor) (any, LoxError) {
+  return visitor.VisitWhileStmt(c)
 }

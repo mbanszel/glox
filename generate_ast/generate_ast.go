@@ -31,6 +31,7 @@ func main() {
 		"Print      : expression Expr",
 		"Block      : statements []Stmt",
 		"Var        : name Token, initializer Expr",
+		"While      : condition Expr, body Stmt",
 	})
 }
 
