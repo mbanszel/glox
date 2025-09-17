@@ -7,6 +7,7 @@ type StmtVisitor interface {
   VisitIfStmt(stmt IfStmt) (any, LoxError)
   VisitPrintStmt(stmt PrintStmt) (any, LoxError)
   VisitBlockStmt(stmt BlockStmt) (any, LoxError)
+  VisitReturnStmt(stmt ReturnStmt) (any, LoxError)
   VisitVarStmt(stmt VarStmt) (any, LoxError)
   VisitWhileStmt(stmt WhileStmt) (any, LoxError)
 }
@@ -92,6 +93,22 @@ func NewBlockStmt(statements []Stmt) BlockStmt {
 
 func (c BlockStmt) Accept(visitor StmtVisitor) (any, LoxError) {
   return visitor.VisitBlockStmt(c)
+}
+//  -------------------------------------------------------------
+type ReturnStmt struct {
+  keyword Token
+  value Expr
+}
+
+func NewReturnStmt(keyword Token, value Expr) ReturnStmt {
+  return ReturnStmt{
+    keyword:keyword,
+    value:value,
+  }
+}
+
+func (c ReturnStmt) Accept(visitor StmtVisitor) (any, LoxError) {
+  return visitor.VisitReturnStmt(c)
 }
 //  -------------------------------------------------------------
 type VarStmt struct {

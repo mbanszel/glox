@@ -378,3 +378,27 @@ func (i *Interpreter) VisitFunctionStmt(stmt FunctionStmt) (any, LoxError) {
 	i.environment.define(stmt.name.Lexeme, function)
 	return nil, nil
 }
+
+type ReturnObj struct {
+	RuntimeErrorObj
+	value any
+}
+
+func (r ReturnObj) GetValue() any {
+	return r.value
+}
+
+func (i *Interpreter) VisitReturnStmt(stmt ReturnStmt) (any, LoxError) {
+	var value any
+	var err LoxError
+	if stmt.value!=nil {
+		value, err = i.evaluate(stmt.value)
+		if err!=nil {
+			return nil, err
+		}
+	}
+	return nil, &ReturnObj{
+		RuntimeErrorObj{stmt.keyword, "return"},
+		value,
+	}
+}

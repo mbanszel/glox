@@ -19,7 +19,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/glox.go",
-            "args": ["examples/test_fun_count.glox"]
+            "args": ["examples/test_clock_expr.glox"]
         },
         {
             "name": "Launch glox wrong1.glox",

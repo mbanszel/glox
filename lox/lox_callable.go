@@ -26,7 +26,15 @@ func (lf *LoxFunction) Call(i *Interpreter, arguments []any) (any, LoxError) {
 	for j := 0; j < lf.Arity(); j++ {
 		environment.define(lf.declaration.params[j].Lexeme, arguments[j])
 	}
-	return i.executeBlock(lf.declaration.body, environment)
+	_, err := i.executeBlock(lf.declaration.body, environment)
+	if err!=nil {
+		return_value, ok := err.(*ReturnObj)
+		if ok {
+			return return_value.GetValue(), nil
+		}
+		return nil, err
+	}
+	return nil, nil
 }
 
 func (lf *LoxFunction) Stringer() string {

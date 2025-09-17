@@ -11,5 +11,5 @@ func (c ClockNativeFunction) Arity() int {
 }
 
 func (c ClockNativeFunction) Call(i *Interpreter, arguments []any) (any, LoxError) {
-	return time.Now().UnixMilli(), nil
+	return float64(time.Now().UnixMilli()), nil
 }

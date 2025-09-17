@@ -461,8 +461,28 @@ func (p *Parser) statement() (Stmt, ParserError) {
 	if p.match(WHILE) {
 		return p.whileStatement()
 	}
+	if p.match(RETURN) {
+		return p.returnStatement()
+	}
 
 	return p.expressionStatement()
+}
+
+func (p *Parser) returnStatement() (Stmt, ParserError) {
+	keyword := p.previous()
+	var value Expr
+	var err ParserError
+	if !p.check(SEMICOLON) {
+		value, err = p.expression()
+		if err!=nil {
+			return nil, err
+		}
+	}
+	_, err = p.consume(SEMICOLON, "Expect ';' after return value")
+	if err!=nil {
+		return nil, err
+	}
+	return NewReturnStmt(keyword, value), nil
 }
 
 func (p *Parser) block() ([]Stmt, ParserError) {
