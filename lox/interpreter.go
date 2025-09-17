@@ -6,6 +6,7 @@ import (
 )
 
 type Interpreter struct {
+	globals *Environment
 	environment *Environment
 }
 
@@ -19,8 +20,11 @@ func (i *Interpreter) VisitAssignmentExpr(expr AssignmentExpr) (any, LoxError) {
 }
 
 func NewInterpreter() *Interpreter {
+	globals := NewEnvironment(nil)
+	globals.define("clock", ClockNativeFunction{})
 	return &Interpreter{
-		environment: NewEnvironment(nil),
+		globals: globals,
+		environment: globals,
 	}
 }
 
@@ -342,3 +346,30 @@ func (i *Interpreter) executeBlock(statements []Stmt, environment *Environment) 
 	}
 	return nil, nil
 }
+func (i *Interpreter) VisitCallExpr(expr CallExpr) (any, LoxError) {
+	callee, err := i.evaluate(expr.callee)
+	if err != nil {
+		return nil, err
+	}
+
+	var arguments []any
+	for _, arg := range(expr.arguments) {
+		arg_evaled, err := i.evaluate(arg)
+		if err != nil {
+			return nil, err
+		}
+		arguments = append(arguments, arg_evaled)
+	}
+
+	function, ok := callee.(LoxCallable)
+	if !ok {
+		return nil, &RuntimeErrorObj{expr.paren, "Can only call functions and classes"}
+	}
+
+	if function.Arity() != len(arguments) {
+		msg := fmt.Sprintf("Expected %d arguments but got %d", function.Arity(), len(arguments))
+		return nil, &RuntimeErrorObj{expr.paren, msg}
+	}
+	return function.Call(i, arguments)
+}
+

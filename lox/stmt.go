@@ -3,6 +3,7 @@ package lox
 
 type StmtVisitor interface {
   VisitExpressionStmt(stmt ExpressionStmt) (any, LoxError)
+  VisitFunctionStmt(stmt FunctionStmt) (any, LoxError)
   VisitIfStmt(stmt IfStmt) (any, LoxError)
   VisitPrintStmt(stmt PrintStmt) (any, LoxError)
   VisitBlockStmt(stmt BlockStmt) (any, LoxError)
@@ -27,6 +28,22 @@ func NewExpressionStmt(expression Expr) ExpressionStmt {
 
 func (c ExpressionStmt) Accept(visitor StmtVisitor) (any, LoxError) {
   return visitor.VisitExpressionStmt(c)
+}
+//  -------------------------------------------------------------
+type FunctionStmt struct {
+  name Token
+  params []Token
+}
+
+func NewFunctionStmt(name Token, params []Token) FunctionStmt {
+  return FunctionStmt{
+    name:name,
+    params:params,
+  }
+}
+
+func (c FunctionStmt) Accept(visitor StmtVisitor) (any, LoxError) {
+  return visitor.VisitFunctionStmt(c)
 }
 //  -------------------------------------------------------------
 type IfStmt struct {

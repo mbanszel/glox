@@ -4,6 +4,7 @@ package lox
 type ExprVisitor interface {
   VisitAssignmentExpr(expr AssignmentExpr) (any, LoxError)
   VisitBinaryExpr(expr BinaryExpr) (any, LoxError)
+  VisitCallExpr(expr CallExpr) (any, LoxError)
   VisitGroupingExpr(expr GroupingExpr) (any, LoxError)
   VisitLiteralExpr(expr LiteralExpr) (any, LoxError)
   VisitLogicalExpr(expr LogicalExpr) (any, LoxError)
@@ -48,6 +49,24 @@ func NewBinaryExpr(left Expr, operator Token, right Expr) BinaryExpr {
 
 func (c BinaryExpr) Accept(visitor ExprVisitor) (any, LoxError) {
   return visitor.VisitBinaryExpr(c)
+}
+//  -------------------------------------------------------------
+type CallExpr struct {
+  callee Expr
+  paren Token
+  arguments []Expr
+}
+
+func NewCallExpr(callee Expr, paren Token, arguments []Expr) CallExpr {
+  return CallExpr{
+    callee:callee,
+    paren:paren,
+    arguments:arguments,
+  }
+}
+
+func (c CallExpr) Accept(visitor ExprVisitor) (any, LoxError) {
+  return visitor.VisitCallExpr(c)
 }
 //  -------------------------------------------------------------
 type GroupingExpr struct {

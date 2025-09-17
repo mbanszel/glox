@@ -21,6 +21,9 @@ func (p AstPrinter) VisitIfStmt(expr BlockStmt) (any, LoxError) {
 func (p AstPrinter) VisitLogicalExpr(expr LogicalExpr) (any, LoxError) {
 	panic("unimplemented")
 }
+func (p AstPrinter) VisitCallExpr(expr CallExpr) (any, LoxError) {
+	panic("unimplemented")
+}
 
 
 func NewAstPrinter() AstPrinter {

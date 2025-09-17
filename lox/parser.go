@@ -184,7 +184,57 @@ func (p *Parser) unary() (Expr, ParserError) {
 		}
 		return NewUnaryExpr(operator, right), nil
 	}
-	return p.primary()
+	return p.call()
+}
+
+func (p *Parser) call() (Expr, ParserError) {
+	expr, err := p.primary()
+	if err!=nil {
+		return nil, err
+	}
+
+	for {
+		if p.match(LEFT_PAREN) {
+			expr, err = p.finishCall(expr)
+			if err!=nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+	return expr, nil
+}
+
+func (p *Parser) finishCall(callee Expr) (Expr, ParserError) {
+	var arguments []Expr
+	if !p.check(RIGHT_PAREN) {
+		for {
+			if len(arguments) >= 255 {
+				// return nil, &ParserErrorObj{
+				// 	p.peek(),
+				// 	"Can't have more than 255 arguments",
+				// }
+				// we want to keep on parsing.
+				Error(p.peek(), "Can't have more than 255 arguments")
+			}
+			arg, err := p.expression()
+			if err != nil {
+				return nil, err
+			}
+			arguments = append(arguments, arg)
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+
+	paren, err := p.consume(RIGHT_PAREN, "Expect ')' after arguments")
+	if err!=nil {
+		return nil, err
+	}
+
+	return NewCallExpr(callee, paren, arguments), nil
 }
 
 func (p *Parser) primary() (Expr, ParserError) {
