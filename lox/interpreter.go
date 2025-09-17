@@ -6,7 +6,7 @@ import (
 )
 
 type Interpreter struct {
-	globals *Environment
+	globals     *Environment
 	environment *Environment
 }
 
@@ -23,7 +23,7 @@ func NewInterpreter() *Interpreter {
 	globals := NewEnvironment(nil)
 	globals.define("clock", ClockNativeFunction{})
 	return &Interpreter{
-		globals: globals,
+		globals:     globals,
 		environment: globals,
 	}
 }
@@ -147,7 +147,7 @@ func (i *Interpreter) VisitLogicalExpr(expr LogicalExpr) (any, LoxError) {
 	if err != nil {
 		return nil, err
 	}
-	if (expr.operator.TokenType == OR) {
+	if expr.operator.TokenType == OR {
 		if left_truthiness {
 			return left, nil
 		}
@@ -353,7 +353,7 @@ func (i *Interpreter) VisitCallExpr(expr CallExpr) (any, LoxError) {
 	}
 
 	var arguments []any
-	for _, arg := range(expr.arguments) {
+	for _, arg := range expr.arguments {
 		arg_evaled, err := i.evaluate(arg)
 		if err != nil {
 			return nil, err
@@ -373,3 +373,8 @@ func (i *Interpreter) VisitCallExpr(expr CallExpr) (any, LoxError) {
 	return function.Call(i, arguments)
 }
 
+func (i *Interpreter) VisitFunctionStmt(stmt FunctionStmt) (any, LoxError) {
+	function := NewLoxFunction(stmt)
+	i.environment.define(stmt.name.Lexeme, function)
+	return nil, nil
+}

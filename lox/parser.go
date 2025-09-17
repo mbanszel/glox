@@ -1,6 +1,5 @@
 package lox
 
-
 // recursive descent parser for (g)lox interpreter
 
 type Parser struct {
@@ -43,7 +42,7 @@ func (p *Parser) Parse() []Stmt {
 //                | "(" expression ")" ;
 
 func (p *Parser) expression() (Expr, ParserError) {
-	return p.assignment();
+	return p.assignment()
 }
 
 func (p *Parser) assignment() (Expr, ParserError) {
@@ -189,14 +188,14 @@ func (p *Parser) unary() (Expr, ParserError) {
 
 func (p *Parser) call() (Expr, ParserError) {
 	expr, err := p.primary()
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
 	for {
 		if p.match(LEFT_PAREN) {
 			expr, err = p.finishCall(expr)
-			if err!=nil {
+			if err != nil {
 				return nil, err
 			}
 		} else {
@@ -230,7 +229,7 @@ func (p *Parser) finishCall(callee Expr) (Expr, ParserError) {
 	}
 
 	paren, err := p.consume(RIGHT_PAREN, "Expect ')' after arguments")
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -332,7 +331,7 @@ func (p *Parser) synchronize() {
 func (p *Parser) error(message string) ParserError {
 	token := p.peek()
 	return &ParserErrorObj{
-		Token: token,
+		Token:   token,
 		Message: message,
 	}
 }
@@ -341,8 +340,8 @@ type ParserError interface {
 	LoxError
 }
 
-type ParserErrorObj struct{
-	Token Token
+type ParserErrorObj struct {
+	Token   Token
 	Message string
 }
 
@@ -357,16 +356,68 @@ func (pe ParserErrorObj) GetMessage() string {
 func (p *Parser) declaration() (Stmt, ParserError) {
 	var stmt Stmt
 	var err ParserError
-	if p.match(VAR) {
+	// if p.match(FUN) {
+	// 	stmt, err = p.function("function")
+	// } else if p.match(VAR) {
+	// 	stmt, err = p.varDeclaration()
+	// } else {
+	// 	stmt, err = p.statement()
+	// }
+	switch {
+	case p.match(FUN):
+		stmt, err = p.function("function")
+	case p.match(VAR):
 		stmt, err = p.varDeclaration()
-	} else {
+	default:
 		stmt, err = p.statement()
 	}
 	if err != nil {
 		p.synchronize()
 	}
 	return stmt, err
-	
+}
+
+func (p *Parser) function(kind string) (Stmt, ParserError) {
+	name, err := p.consume(IDENTIFIER, "Expect "+kind+" name")
+	if err != nil {
+		return nil, err
+	}
+	_, err = p.consume(LEFT_PAREN, "Expect '(' after " + kind + " name")
+	if err!=nil {
+		return nil, err
+	}
+
+	var parameters []Token
+	if !p.check(RIGHT_BRACE) {
+		for {
+			if len(parameters) >= 255 {
+				Error(p.peek(), "Can't have more than 255 paremters")
+			}
+
+			par, err := p.consume(IDENTIFIER, "Expect parameter name")
+			if err != nil {
+				return nil, err
+			}
+			parameters = append(parameters, par)
+			if !p.match(COMMA) {
+				break
+			}
+		}
+	}
+	_, err = p.consume(RIGHT_PAREN, "Expect ')' after parameters")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = p.consume(LEFT_BRACE, "Expect '{' before "+kind+" body")
+	if err != nil {
+		return nil, err
+	}
+	body, err := p.block()
+	if err != nil {
+		return nil, err
+	}
+	return NewFunctionStmt(name, parameters, body), nil
 }
 
 func (p *Parser) varDeclaration() (Stmt, ParserError) {
@@ -390,11 +441,16 @@ func (p *Parser) varDeclaration() (Stmt, ParserError) {
 	return NewVarStmt(name, initializer), nil
 }
 
-
 func (p *Parser) statement() (Stmt, ParserError) {
-	if p.match(FOR) {return p.forStatement()}
-	if p.match(IF) {return p.ifStatement()}
-	if p.match(PRINT) {return p.printStatement()}
+	if p.match(FOR) {
+		return p.forStatement()
+	}
+	if p.match(IF) {
+		return p.ifStatement()
+	}
+	if p.match(PRINT) {
+		return p.printStatement()
+	}
 	if p.match(LEFT_BRACE) {
 		stmts, err := p.block()
 		if err != nil {
@@ -402,7 +458,9 @@ func (p *Parser) statement() (Stmt, ParserError) {
 		}
 		return NewBlockStmt(stmts), nil
 	}
-	if p.match(WHILE) { return p.whileStatement() }
+	if p.match(WHILE) {
+		return p.whileStatement()
+	}
 
 	return p.expressionStatement()
 }
@@ -517,13 +575,14 @@ func (p *Parser) forStatement() (Stmt, ParserError) {
 	}
 
 	switch {
-	case p.match(SEMICOLON): initializer = nil
+	case p.match(SEMICOLON):
+		initializer = nil
 	case p.match(VAR):
 		initializer, err = p.varDeclaration()
 		if err != nil {
 			return nil, err
 		}
-	default: 
+	default:
 		initializer, err = p.expressionStatement()
 		if err != nil {
 			return nil, err
@@ -539,7 +598,6 @@ func (p *Parser) forStatement() (Stmt, ParserError) {
 	if err != nil {
 		return nil, err
 	}
-
 
 	if !p.check(RIGHT_PAREN) {
 		increment, err = p.expression()

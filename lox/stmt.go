@@ -33,12 +33,14 @@ func (c ExpressionStmt) Accept(visitor StmtVisitor) (any, LoxError) {
 type FunctionStmt struct {
   name Token
   params []Token
+  body []Stmt
 }
 
-func NewFunctionStmt(name Token, params []Token) FunctionStmt {
+func NewFunctionStmt(name Token, params []Token, body []Stmt) FunctionStmt {
   return FunctionStmt{
     name:name,
     params:params,
+    body:body,
   }
 }
 

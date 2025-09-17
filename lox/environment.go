@@ -47,5 +47,5 @@ func (e *Environment) get(name Token) (any, RuntimeError) {
 	if e.Enclosing != nil {
 		return e.Enclosing.get(name)
 	}
-	return "", &RuntimeErrorObj{name, "Undefined variable '" + name.Lexeme}
+	return "", &RuntimeErrorObj{name, "Undefined variable '" + name.Lexeme + "'"}
 }

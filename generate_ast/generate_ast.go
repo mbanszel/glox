@@ -28,7 +28,7 @@ func main() {
 
 	defineAst(outputDir, "Stmt", []string{
 		"Expression : expression Expr",
-		"Function   : name Token, params []Token",
+		"Function   : name Token, params []Token, body []Stmt",
 		"If         : condition Expr, thenBranch Stmt, elseBranch Stmt",
 		"Print      : expression Expr",
 		"Block      : statements []Stmt",
