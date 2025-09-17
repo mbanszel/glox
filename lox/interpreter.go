@@ -121,7 +121,7 @@ func (i *Interpreter) VisitBinaryExpr(expr BinaryExpr) (any, LoxError) {
 	case BANG_EQUAL:
 		value, err := i.isEqual(left, right)
 		return !value, err
-	case EQUAL:
+	case EQUAL_EQUAL:
 		return i.isEqual(left, right)
 	}
 
